@@ -1,55 +1,55 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db');
+const pool = require('../db');
 const { requireAdmin } = require('../middleware/auth');
 
-// POST /api/events/:id/products
-router.post('/events/:id/products', requireAdmin, (req, res) => {
-  const event = db.prepare('SELECT * FROM events WHERE id = ?').get(req.params.id);
-  if (!event) return res.status(404).json({ error: 'אירוע לא נמצא' });
+router.post('/events/:id/products', requireAdmin, async (req, res) => {
+  try {
+    const { rows: ev } = await pool.query('SELECT * FROM events WHERE id = $1', [req.params.id]);
+    if (!ev[0]) return res.status(404).json({ error: 'אירוע לא נמצא' });
 
-  const { name, price, available_quantity } = req.body;
-  if (!name || price === undefined) {
-    return res.status(400).json({ error: 'שם ומחיר נדרשים' });
+    const { name, price, available_quantity } = req.body;
+    if (!name || price === undefined)
+      return res.status(400).json({ error: 'שם ומחיר נדרשים' });
+
+    const { rows } = await pool.query(
+      'INSERT INTO products (event_id, name, price, available_quantity) VALUES ($1, $2, $3, $4) RETURNING *',
+      [ev[0].id, name, price, available_quantity || null]
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  const result = db.prepare(
-    'INSERT INTO products (event_id, name, price, available_quantity) VALUES (?, ?, ?, ?)'
-  ).run(event.id, name, price, available_quantity || null);
-
-  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(result.lastInsertRowid);
-  res.status(201).json(product);
 });
 
-// PUT /api/products/:id
-router.put('/:id', requireAdmin, (req, res) => {
-  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
-  if (!product) return res.status(404).json({ error: 'מוצר לא נמצא' });
+router.put('/:id', requireAdmin, async (req, res) => {
+  try {
+    const { rows: pr } = await pool.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
+    if (!pr[0]) return res.status(404).json({ error: 'מוצר לא נמצא' });
+    const p = pr[0];
 
-  const { name, price, available_quantity } = req.body;
-
-  db.prepare(`
-    UPDATE products SET name = ?, price = ?, available_quantity = ? WHERE id = ?
-  `).run(
-    name || product.name,
-    price !== undefined ? price : product.price,
-    available_quantity !== undefined ? available_quantity : product.available_quantity,
-    product.id
-  );
-
-  const updated = db.prepare('SELECT * FROM products WHERE id = ?').get(product.id);
-  res.json(updated);
+    const { name, price, available_quantity } = req.body;
+    const { rows } = await pool.query(
+      'UPDATE products SET name = $1, price = $2, available_quantity = $3 WHERE id = $4 RETURNING *',
+      [name || p.name, price !== undefined ? price : p.price, available_quantity !== undefined ? available_quantity : p.available_quantity, p.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// DELETE /api/products/:id
-router.delete('/:id', requireAdmin, (req, res) => {
-  const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
-  if (!product) return res.status(404).json({ error: 'מוצר לא נמצא' });
+router.delete('/:id', requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'מוצר לא נמצא' });
 
-  db.prepare('DELETE FROM purchases WHERE product_id = ?').run(product.id);
-  db.prepare('DELETE FROM products WHERE id = ?').run(product.id);
-
-  res.json({ message: 'המוצר נמחק בהצלחה' });
+    await pool.query('DELETE FROM purchases WHERE product_id = $1', [rows[0].id]);
+    await pool.query('DELETE FROM products WHERE id = $1', [rows[0].id]);
+    res.json({ message: 'המוצר נמחק בהצלחה' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
