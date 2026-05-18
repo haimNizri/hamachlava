@@ -30,25 +30,18 @@ export default function CustomerEvent() {
   const [customer, setCustomer] = useState(null)
   const [error, setError] = useState(null)
 
-  // Registration form
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [regLoading, setRegLoading] = useState(false)
   const [regError, setRegError] = useState('')
 
-  // Quantities per product
   const [quantities, setQuantities] = useState({})
   const [submitLoading, setSubmitLoading] = useState(false)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
 
-  useEffect(() => {
-    init()
-  }, [eventId])
+  useEffect(() => { init() }, [eventId])
 
   async function init() {
     const deviceId = getOrCreateDeviceId()
-
-    // Load event
     try {
       const res = await fetch(`/api/events/${eventId}/public`)
       if (!res.ok) {
@@ -60,7 +53,6 @@ export default function CustomerEvent() {
       const eventData = await res.json()
       setEvent(eventData)
 
-      // Check registration
       const stored = getStoredCustomer()
       if (stored?.token && stored?.customer) {
         setCustomer(stored.customer)
@@ -68,10 +60,8 @@ export default function CustomerEvent() {
         return
       }
 
-      // Check by device
       const check = await customersApi.check(deviceId)
       if (check.registered) {
-        // Issue a new token
         const reg = await customersApi.register({
           device_id: deviceId,
           first_name: check.customer.first_name,
@@ -83,7 +73,7 @@ export default function CustomerEvent() {
       } else {
         setStage('register')
       }
-    } catch (err) {
+    } catch {
       setError('שגיאה בטעינת האירוע')
       setStage('error')
     }
@@ -123,10 +113,7 @@ export default function CustomerEvent() {
     }
 
     const storedCustomer = getStoredCustomer()
-    if (!storedCustomer?.token) {
-      setStage('register')
-      return
-    }
+    if (!storedCustomer?.token) { setStage('register'); return }
 
     setSubmitLoading(true)
     const session_id = crypto.randomUUID()
@@ -146,9 +133,8 @@ export default function CustomerEvent() {
           })
         })
       }
-      setSubmitSuccess(true)
       setStage('success')
-    } catch (err) {
+    } catch {
       showInlineToast('שגיאה בשמירת הרכישה', 'error')
     } finally {
       setSubmitLoading(false)
@@ -164,14 +150,11 @@ export default function CustomerEvent() {
     return sum + (Number(quantities[p.id]) || 0) * p.price
   }, 0) || 0
 
-  // ---- RENDER ----
-
   if (stage === 'loading') {
     return (
       <div style={pageStyle}>
         <div style={cardStyle}>
-          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-light)' }}>
-            <div style={{ fontSize: '2.5rem', marginBottom: '12px', animation: 'spin 1s linear infinite' }}>⏳</div>
+          <div style={{ textAlign: 'center', padding: '40px', color: '#6b7a99', fontSize: '0.9rem' }}>
             טוען...
           </div>
         </div>
@@ -184,9 +167,8 @@ export default function CustomerEvent() {
       <div style={pageStyle}>
         <div style={cardStyle}>
           <div style={{ textAlign: 'center', padding: '40px' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>😕</div>
-            <h2 style={{ color: 'var(--accent)', marginBottom: '8px' }}>שגיאה</h2>
-            <p style={{ color: 'var(--text-light)' }}>{error}</p>
+            <h2 style={{ color: '#c0392b', marginBottom: '8px', fontSize: '1.1rem' }}>שגיאה</h2>
+            <p style={{ color: '#6b7a99', fontSize: '0.9rem' }}>{error}</p>
           </div>
         </div>
       </div>
@@ -196,34 +178,34 @@ export default function CustomerEvent() {
   if (stage === 'register') {
     return (
       <div style={pageStyle}>
-        {/* Header */}
         <div style={headerStyle}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🏺</div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>המחלבה</h1>
+          <h1 style={{ fontSize: '1.3rem', fontWeight: 700, margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            המחלבה
+          </h1>
           {event && (
-            <p style={{ opacity: 0.8, margin: '4px 0 0', fontSize: '1rem' }}>{event.name}</p>
+            <p style={{ opacity: 0.7, margin: '4px 0 0', fontSize: '0.9rem' }}>{event.name}</p>
           )}
         </div>
 
         <div style={cardStyle}>
-          <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '6px' }}>
-            ברוך הבא! 👋
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1a2332', marginBottom: '6px' }}>
+            ברוך הבא
           </h2>
-          <p style={{ color: 'var(--text-light)', marginBottom: '24px', fontSize: '0.95rem' }}>
-            כדי להמשיך, יש להירשם פעם אחת. הרישום שלך יישמר במכשיר זה.
+          <p style={{ color: '#6b7a99', marginBottom: '24px', fontSize: '0.88rem', lineHeight: 1.5 }}>
+            יש להירשם פעם אחת. הרישום יישמר במכשיר זה.
           </p>
 
           {regError && (
             <div style={{
-              background: '#eef2fb', border: '1px solid #b8cbef',
-              borderRadius: 'var(--radius-sm)', padding: '10px 14px',
-              color: 'var(--accent)', fontSize: '0.9rem', marginBottom: '16px'
+              background: '#fff3f3', border: '1px solid #f0c0c0',
+              borderRadius: '2px', padding: '10px 14px',
+              color: '#c0392b', fontSize: '0.85rem', marginBottom: '16px'
             }}>
               {regError}
             </div>
           )}
 
-          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
               <label style={fieldLabelStyle}>שם פרטי</label>
               <input
@@ -233,8 +215,8 @@ export default function CustomerEvent() {
                 placeholder="הזן שם פרטי"
                 autoFocus
                 style={fieldInputStyle}
-                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                onFocus={e => e.target.style.borderColor = '#3b6fd4'}
+                onBlur={e => e.target.style.borderColor = '#e0e6ed'}
               />
             </div>
             <div>
@@ -245,28 +227,25 @@ export default function CustomerEvent() {
                 onChange={e => setLastName(e.target.value)}
                 placeholder="הזן שם משפחה"
                 style={fieldInputStyle}
-                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                onFocus={e => e.target.style.borderColor = '#3b6fd4'}
+                onBlur={e => e.target.style.borderColor = '#e0e6ed'}
               />
             </div>
             <button
               type="submit"
               disabled={regLoading}
               style={{
-                background: regLoading ? '#aaa' : 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
-                color: '#fff',
-                padding: '14px',
-                borderRadius: 'var(--radius-sm)',
-                fontSize: '1.05rem',
+                background: regLoading ? '#8ca8e8' : 'linear-gradient(135deg, #3b6fd4, #2a5bb8)',
+                color: '#f0f2f5',
+                padding: '13px',
+                borderRadius: '2px',
+                fontSize: '0.95rem',
                 fontWeight: 700,
                 marginTop: '4px',
-                boxShadow: '0 4px 16px rgba(59,111,212,0.35)',
-                transition: 'transform 0.1s'
+                letterSpacing: '0.04em'
               }}
-              onMouseDown={e => { if (!regLoading) e.target.style.transform = 'scale(0.98)' }}
-              onMouseUp={e => e.target.style.transform = 'scale(1)'}
             >
-              {regLoading ? 'נרשם...' : 'הירשם והמשך →'}
+              {regLoading ? 'נרשם...' : 'הירשם והמשך'}
             </button>
           </form>
         </div>
@@ -278,34 +257,30 @@ export default function CustomerEvent() {
     return (
       <div style={pageStyle}>
         <div style={headerStyle}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🏺</div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>המחלבה</h1>
+          <h1 style={{ fontSize: '1.3rem', fontWeight: 700, margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            המחלבה
+          </h1>
         </div>
         <div style={{ ...cardStyle, textAlign: 'center' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '16px' }}>🎉</div>
-          <h2 style={{ color: 'var(--success)', fontSize: '1.4rem', fontWeight: 700, marginBottom: '10px' }}>
-            הרכישה נרשמה בהצלחה!
+          <h2 style={{ color: '#1a7a4a', fontSize: '1.2rem', fontWeight: 700, marginBottom: '10px' }}>
+            הרכישה נרשמה בהצלחה
           </h2>
-          <p style={{ color: 'var(--text-light)', marginBottom: '24px' }}>
+          <p style={{ color: '#6b7a99', marginBottom: '20px', fontSize: '0.88rem' }}>
             תודה {customer?.first_name}! הרכישות שלך נשמרו.
           </p>
           <div style={{
-            background: '#e6f4ee', borderRadius: 'var(--radius-sm)',
-            padding: '16px', marginBottom: '20px',
-            fontSize: '1.1rem', fontWeight: 700, color: 'var(--success)'
+            background: '#f0f2f5',
+            borderRadius: '2px', padding: '14px', marginBottom: '20px',
+            fontSize: '1rem', fontWeight: 700, color: '#1a2332'
           }}>
-            סה"כ ששולם: ₪{totalAmount.toFixed(2)}
+            סה"כ: ₪{totalAmount.toFixed(2)}
           </div>
           <button
-            onClick={() => {
-              setQuantities({})
-              setSubmitSuccess(false)
-              setStage('event')
-            }}
+            onClick={() => { setQuantities({}); setStage('event') }}
             style={{
-              background: 'var(--primary)', color: '#fff',
-              padding: '12px 28px', borderRadius: 'var(--radius-sm)',
-              fontWeight: 700, fontSize: '1rem'
+              background: 'linear-gradient(135deg, #3b6fd4, #2a5bb8)', color: '#f0f2f5',
+              padding: '11px 24px', borderRadius: '2px',
+              fontWeight: 700, fontSize: '0.88rem', letterSpacing: '0.04em'
             }}
           >
             חזור לאירוע
@@ -318,14 +293,14 @@ export default function CustomerEvent() {
   // Stage: event
   return (
     <div style={pageStyle}>
-      {/* Header */}
       <div style={headerStyle}>
-        <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🏺</div>
-        <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: '0 0 4px' }}>המחלבה</h1>
+        <h1 style={{ fontSize: '1.3rem', fontWeight: 700, margin: '0 0 4px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+          המחלבה
+        </h1>
         {event && (
           <>
-            <p style={{ opacity: 0.9, margin: '0 0 2px', fontSize: '1.1rem', fontWeight: 600 }}>{event.name}</p>
-            <p style={{ opacity: 0.7, margin: 0, fontSize: '0.9rem' }}>
+            <p style={{ opacity: 0.85, margin: '0 0 2px', fontSize: '0.95rem', fontWeight: 600 }}>{event.name}</p>
+            <p style={{ opacity: 0.6, margin: 0, fontSize: '0.82rem' }}>
               {new Date(event.date).toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </>
@@ -333,20 +308,20 @@ export default function CustomerEvent() {
       </div>
 
       {/* Greeting */}
-      <div style={{ ...cardStyle, paddingTop: '16px', paddingBottom: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ ...cardStyle, paddingTop: '14px', paddingBottom: '14px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{
-          width: '44px', height: '44px', borderRadius: '50%', flexShrink: 0,
-          background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+          width: '38px', height: '38px', borderRadius: '50%', flexShrink: 0,
+          background: '#1a2332',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', fontSize: '1.2rem', fontWeight: 700
+          color: '#f0f2f5', fontSize: '1rem', fontWeight: 700
         }}>
           {customer?.first_name?.[0]?.toUpperCase() || '?'}
         </div>
         <div>
-          <p style={{ margin: 0, fontWeight: 700, color: 'var(--primary)' }}>
+          <p style={{ margin: 0, fontWeight: 700, color: '#1a2332', fontSize: '0.9rem' }}>
             שלום, {customer?.first_name} {customer?.last_name}
           </p>
-          <p style={{ margin: 0, fontSize: '0.83rem', color: 'var(--text-light)' }}>
+          <p style={{ margin: 0, fontSize: '0.78rem', color: '#6b7a99' }}>
             בחר מוצרים והזן כמות
           </p>
         </div>
@@ -354,7 +329,7 @@ export default function CustomerEvent() {
 
       {/* Products */}
       <form onSubmit={handleSubmitPurchases}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
           {event?.products?.map(product => {
             const qty = quantities[product.id] || ''
             const subtotal = (Number(qty) || 0) * product.price
@@ -362,24 +337,24 @@ export default function CustomerEvent() {
               <div
                 key={product.id}
                 style={{
-                  background: '#fff',
-                  borderRadius: 'var(--radius)',
+                  background: '#f8fafc',
+                  borderRadius: '4px',
                   padding: '16px',
-                  boxShadow: 'var(--shadow)',
-                  border: qty > 0 ? '2px solid var(--accent)' : '2px solid transparent',
-                  transition: 'border-color 0.2s'
+                  border: qty > 0 ? '1.5px solid #3b6fd4' : '1.5px solid #e0e6ed',
+                  transition: 'border-color 0.15s',
+                  margin: '0 16px'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--primary)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1a2332' }}>
                       {product.name}
                     </div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--accent)', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#1a2332', marginTop: '2px' }}>
                       ₪{product.price}
                     </div>
                     {qty > 0 && (
-                      <div style={{ fontSize: '0.85rem', color: 'var(--success)', fontWeight: 600, marginTop: '2px' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#1a7a4a', fontWeight: 600, marginTop: '2px' }}>
                         סה"כ: ₪{subtotal.toFixed(2)}
                       </div>
                     )}
@@ -391,11 +366,12 @@ export default function CustomerEvent() {
                       type="button"
                       onClick={() => updateQty(product.id, Math.max(0, (Number(qty) || 0) - 1))}
                       style={{
-                        width: '36px', height: '36px',
-                        borderRadius: '50%',
-                        background: qty > 0 ? 'var(--accent)' : 'var(--bg)',
-                        color: qty > 0 ? '#fff' : 'var(--text-light)',
-                        border: 'none', fontSize: '1.3rem', fontWeight: 700,
+                        width: '34px', height: '34px',
+                        borderRadius: '2px',
+                        background: qty > 0 ? '#1a2332' : '#f0f2f5',
+                        color: qty > 0 ? '#f0f2f5' : '#6b7a99',
+                        border: '1px solid ' + (qty > 0 ? '#1a2332' : '#e0e6ed'),
+                        fontSize: '1.2rem', fontWeight: 700,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         flexShrink: 0
                       }}
@@ -408,28 +384,28 @@ export default function CustomerEvent() {
                       onChange={e => updateQty(product.id, e.target.value)}
                       min="0"
                       style={{
-                        width: '52px',
+                        width: '48px',
                         textAlign: 'center',
-                        padding: '7px 4px',
-                        border: '2px solid var(--border)',
-                        borderRadius: 'var(--radius-sm)',
-                        fontSize: '1.05rem',
+                        padding: '6px 4px',
+                        border: '1.5px solid #e0e6ed',
+                        borderRadius: '2px',
+                        fontSize: '1rem',
                         fontWeight: 700,
                         outline: 'none',
                         direction: 'ltr'
                       }}
-                      onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                      onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                      onFocus={e => e.target.style.borderColor = '#3b6fd4'}
+                      onBlur={e => e.target.style.borderColor = '#e0e6ed'}
                     />
                     <button
                       type="button"
                       onClick={() => updateQty(product.id, (Number(qty) || 0) + 1)}
                       style={{
-                        width: '36px', height: '36px',
-                        borderRadius: '50%',
-                        background: 'var(--primary)',
-                        color: '#fff',
-                        border: 'none', fontSize: '1.3rem', fontWeight: 700,
+                        width: '34px', height: '34px',
+                        borderRadius: '2px',
+                        background: 'linear-gradient(135deg, #3b6fd4, #2a5bb8)',
+                        color: '#f0f2f5',
+                        border: 'none', fontSize: '1.2rem', fontWeight: 700,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         flexShrink: 0
                       }}
@@ -446,20 +422,21 @@ export default function CustomerEvent() {
         {/* Total & Submit */}
         <div style={{
           position: 'sticky', bottom: '16px',
-          background: '#fff',
-          borderRadius: 'var(--radius)',
-          padding: '16px',
-          boxShadow: '0 -4px 20px rgba(0,0,0,0.1), var(--shadow)',
-          border: '1px solid var(--border)'
+          background: '#f8fafc',
+          borderRadius: '4px',
+          padding: '14px 16px',
+          boxShadow: '0 -2px 12px rgba(0,0,0,0.08)',
+          border: '1px solid #e0e6ed',
+          margin: '0 16px'
         }}>
           {totalAmount > 0 && (
             <div style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              marginBottom: '12px', padding: '10px 14px',
-              background: '#e6f4ee', borderRadius: 'var(--radius-sm)'
+              marginBottom: '12px', padding: '10px 12px',
+              background: '#f0f2f5', borderRadius: '2px'
             }}>
-              <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: '1rem' }}>סה"כ לתשלום:</span>
-              <span style={{ fontWeight: 800, color: 'var(--success)', fontSize: '1.2rem' }}>₪{totalAmount.toFixed(2)}</span>
+              <span style={{ fontWeight: 700, color: '#1a2332', fontSize: '0.9rem' }}>סה"כ לתשלום:</span>
+              <span style={{ fontWeight: 800, color: '#1a2332', fontSize: '1.1rem' }}>₪{totalAmount.toFixed(2)}</span>
             </div>
           )}
           <button
@@ -467,14 +444,14 @@ export default function CustomerEvent() {
             disabled={submitLoading || totalAmount === 0}
             style={{
               width: '100%',
-              background: totalAmount === 0 ? '#ddd' : submitLoading ? '#aaa' : 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
-              color: '#fff',
-              padding: '14px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '1.05rem',
+              background: totalAmount === 0 ? '#c8d0dc' : submitLoading ? '#8ca8e8' : 'linear-gradient(135deg, #3b6fd4, #2a5bb8)',
+              color: '#f0f2f5',
+              padding: '13px',
+              borderRadius: '2px',
+              fontSize: '0.95rem',
               fontWeight: 700,
-              boxShadow: totalAmount > 0 ? '0 4px 16px rgba(59,111,212,0.3)' : 'none',
-              transition: 'all 0.2s'
+              letterSpacing: '0.04em',
+              transition: 'background 0.15s'
             }}
           >
             {submitLoading ? 'שומר...' : totalAmount === 0 ? 'בחר מוצרים' : `שלח הזמנה • ₪${totalAmount.toFixed(2)}`}
@@ -485,45 +462,47 @@ export default function CustomerEvent() {
   )
 }
 
-// Styles
 const pageStyle = {
   minHeight: '100vh',
-  background: 'linear-gradient(180deg, var(--primary) 0%, var(--primary-light) 120px, var(--bg) 120px)',
-  padding: '0 0 100px'
+  background: '#f0f2f5',
+  paddingBottom: '100px'
 }
 
 const headerStyle = {
-  padding: '28px 20px 24px',
+  padding: '24px 20px 20px',
   textAlign: 'center',
+  background: 'linear-gradient(180deg, #1a2332 0%, #131f2e 100%)',
   color: '#fff'
 }
 
 const cardStyle = {
-  background: '#fff',
-  borderRadius: 'var(--radius)',
+  background: '#f8fafc',
+  borderRadius: '4px',
   padding: '24px',
-  margin: '0 16px 16px',
-  boxShadow: 'var(--shadow-lg)',
-  animation: 'fadeIn 0.3s ease'
+  margin: '16px 16px 12px',
+  border: '1px solid #e0e6ed',
+  animation: 'fadeIn 0.25s ease'
 }
 
 const fieldLabelStyle = {
   display: 'block',
   marginBottom: '6px',
-  fontWeight: 700,
-  fontSize: '0.9rem',
-  color: 'var(--text)'
+  fontWeight: 600,
+  fontSize: '0.78rem',
+  color: '#1a2332',
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase'
 }
 
 const fieldInputStyle = {
   width: '100%',
-  padding: '13px 15px',
-  border: '2px solid var(--border)',
-  borderRadius: 'var(--radius-sm)',
+  padding: '12px 14px',
+  border: '1.5px solid #e0e6ed',
+  borderRadius: '2px',
   fontSize: '1rem',
-  background: '#fafafa',
+  background: '#f8fafc',
   outline: 'none',
-  transition: 'border-color 0.2s'
+  transition: 'border-color 0.15s'
 }
 
 let inlineToastTimer = null

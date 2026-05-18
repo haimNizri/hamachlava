@@ -6,22 +6,27 @@ import ToastContainer, { showToast } from '../components/Toast'
 
 const inputStyle = {
   width: '100%',
-  padding: '11px 14px',
-  border: '2px solid var(--border)',
-  borderRadius: 'var(--radius-sm)',
-  fontSize: '1rem',
-  background: '#fafafa',
+  padding: '10px 12px',
+  border: '1.5px solid #e0e6ed',
+  borderRadius: '2px',
+  fontSize: '0.95rem',
+  background: '#f8fafc',
   outline: 'none',
-  transition: 'border-color 0.2s'
+  transition: 'border-color 0.15s'
 }
 
 const labelStyle = {
   display: 'block',
   marginBottom: '6px',
   fontWeight: 600,
-  fontSize: '0.9rem',
-  color: 'var(--text)'
+  fontSize: '0.78rem',
+  color: '#1a2332',
+  letterSpacing: '0.05em',
+  textTransform: 'uppercase'
 }
+
+function focusOn(e) { e.target.style.borderColor = '#3b6fd4' }
+function focusOff(e) { e.target.style.borderColor = '#e0e6ed' }
 
 export default function AdminCreateEvent() {
   const navigate = useNavigate()
@@ -84,34 +89,33 @@ export default function AdminCreateEvent() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+    <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
       <Navbar />
       <ToastContainer />
 
-      <div style={{ maxWidth: '680px', margin: '0 auto', padding: '24px 16px' }}>
-        {/* Back */}
+      <div style={{ maxWidth: '660px', margin: '0 auto', padding: '28px 16px' }}>
         <button
           onClick={() => navigate('/admin')}
           style={{
-            background: 'none', border: 'none', color: 'var(--text-light)',
-            fontSize: '0.95rem', cursor: 'pointer', marginBottom: '16px',
+            background: 'none', border: 'none', color: '#6b7a99',
+            fontSize: '0.85rem', cursor: 'pointer', marginBottom: '20px',
             display: 'flex', alignItems: 'center', gap: '6px', padding: 0
           }}
         >
           ← חזרה
         </button>
 
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1a2332', marginBottom: '24px', letterSpacing: '0.02em' }}>
           יצירת אירוע חדש
         </h1>
 
         <form onSubmit={handleSubmit}>
-          {/* Event Details Card */}
+          {/* Event Details */}
           <div style={{
-            background: '#fff', borderRadius: 'var(--radius)',
-            padding: '24px', boxShadow: 'var(--shadow)', marginBottom: '20px'
+            background: '#f8fafc', border: '1px solid #e0e6ed',
+            borderRadius: '4px', padding: '24px', marginBottom: '16px'
           }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
+            <h2 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7a99', marginBottom: '20px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
               פרטי האירוע
             </h2>
 
@@ -125,8 +129,8 @@ export default function AdminCreateEvent() {
                   placeholder="לדוגמה: ערב ביר 2024"
                   required
                   style={inputStyle}
-                  onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                  onFocus={focusOn}
+                  onBlur={focusOff}
                 />
               </div>
 
@@ -139,8 +143,8 @@ export default function AdminCreateEvent() {
                     onChange={e => updateForm('date', e.target.value)}
                     required
                     style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-                    onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                    onFocus={focusOn}
+                    onBlur={focusOff}
                   />
                 </div>
                 <div>
@@ -152,8 +156,8 @@ export default function AdminCreateEvent() {
                     placeholder="כמות"
                     min="1"
                     style={inputStyle}
-                    onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-                    onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                    onFocus={focusOn}
+                    onBlur={focusOff}
                   />
                 </div>
               </div>
@@ -166,67 +170,66 @@ export default function AdminCreateEvent() {
                   placeholder="הערות נוספות לאירוע..."
                   rows={3}
                   style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5 }}
-                  onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                  onFocus={focusOn}
+                  onBlur={focusOff}
                 />
               </div>
             </div>
           </div>
 
-          {/* Products Card */}
+          {/* Products */}
           <div style={{
-            background: '#fff', borderRadius: 'var(--radius)',
-            padding: '24px', boxShadow: 'var(--shadow)', marginBottom: '24px'
+            background: '#f8fafc', border: '1px solid #e0e6ed',
+            borderRadius: '4px', padding: '24px', marginBottom: '24px'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--primary)', margin: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6b7a99', margin: 0, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 מוצרים ({products.length})
               </h2>
               <button
                 type="button"
                 onClick={addProduct}
                 style={{
-                  background: 'var(--primary)', color: '#fff',
-                  padding: '7px 16px', borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.9rem', fontWeight: 600,
-                  display: 'flex', alignItems: 'center', gap: '6px'
+                  background: 'linear-gradient(135deg, #3b6fd4, #2a5bb8)', color: '#f0f2f5',
+                  padding: '6px 14px', borderRadius: '2px',
+                  fontSize: '0.8rem', fontWeight: 600,
+                  letterSpacing: '0.04em'
                 }}
               >
                 + הוסף מוצר
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {products.map((product, i) => (
                 <div
                   key={i}
                   style={{
-                    background: '#f8f9fa',
+                    background: '#f8fafc',
                     padding: '14px',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid var(--border)'
+                    borderRadius: '2px',
+                    border: '1px solid #e0e6ed'
                   }}
                 >
-                  {/* Product name row with delete button */}
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
                     <input
                       type="text"
                       value={product.name}
                       onChange={e => updateProduct(i, 'name', e.target.value)}
                       placeholder="שם המוצר"
-                      style={{ ...inputStyle, flex: 1, background: '#fff', margin: 0 }}
-                      onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-                      onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                      style={{ ...inputStyle, flex: 1, margin: 0 }}
+                      onFocus={focusOn}
+                      onBlur={focusOff}
                     />
                     <button
                       type="button"
                       onClick={() => removeProduct(i)}
                       disabled={products.length === 1}
                       style={{
-                        background: products.length === 1 ? '#f5f5f5' : '#eef2fb',
-                        color: products.length === 1 ? '#ccc' : 'var(--accent)',
-                        border: `1px solid ${products.length === 1 ? '#eee' : '#b8cbef'}`,
-                        borderRadius: 'var(--radius-sm)',
+                        background: '#f8fafc',
+                        color: products.length === 1 ? '#c8d0dc' : '#6b7a99',
+                        border: '1px solid #e0e6ed',
+                        borderRadius: '2px',
                         width: '32px', height: '32px',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '1.1rem', flexShrink: 0
@@ -235,12 +238,11 @@ export default function AdminCreateEvent() {
                       ×
                     </button>
                   </div>
-                  {/* Price and stock side by side */}
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <div style={{ position: 'relative', flex: 1 }}>
                       <span style={{
                         position: 'absolute', right: '10px', top: '50%',
-                        transform: 'translateY(-50%)', color: 'var(--text-light)',
+                        transform: 'translateY(-50%)', color: '#6b7a99',
                         fontSize: '0.9rem', pointerEvents: 'none'
                       }}>₪</span>
                       <input
@@ -250,41 +252,41 @@ export default function AdminCreateEvent() {
                         placeholder="מחיר"
                         min="0"
                         step="0.5"
-                        style={{ ...inputStyle, background: '#fff', width: '100%', paddingRight: '26px', margin: 0 }}
-                        onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-                        onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                        style={{ ...inputStyle, width: '100%', paddingRight: '26px', margin: 0 }}
+                        onFocus={focusOn}
+                        onBlur={focusOff}
                       />
                     </div>
                     <input
                       type="number"
                       value={product.available_quantity}
                       onChange={e => updateProduct(i, 'available_quantity', e.target.value)}
-                      placeholder="מלאי"
+                      placeholder="מלאי (אופציונלי)"
                       min="0"
-                      style={{ ...inputStyle, background: '#fff', flex: 1, margin: 0 }}
-                      onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-                      onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                      style={{ ...inputStyle, flex: 1, margin: 0 }}
+                      onFocus={focusOn}
+                      onBlur={focusOff}
                     />
                   </div>
                 </div>
               ))}
             </div>
 
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginTop: '10px' }}>
-              * מחיר הוא שדה חובה. ניתן להוסיף מוצרים גם לאחר יצירת האירוע.
+            <p style={{ fontSize: '0.78rem', color: '#6b7a99', marginTop: '10px' }}>
+              מחיר הוא שדה חובה. ניתן להוסיף מוצרים גם לאחר יצירת האירוע.
             </p>
           </div>
 
-          {/* Submit Buttons */}
+          {/* Submit */}
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
             <button
               type="button"
               onClick={() => navigate('/admin')}
               style={{
-                background: '#fff', color: 'var(--text)',
-                border: '2px solid var(--border)',
-                padding: '12px 24px', borderRadius: 'var(--radius-sm)',
-                fontWeight: 600, fontSize: '1rem'
+                background: '#f8fafc', color: '#1a2332',
+                border: '1px solid #e0e6ed',
+                padding: '11px 22px', borderRadius: '2px',
+                fontWeight: 600, fontSize: '0.85rem'
               }}
             >
               ביטול
@@ -293,11 +295,11 @@ export default function AdminCreateEvent() {
               type="submit"
               disabled={loading}
               style={{
-                background: loading ? '#aaa' : 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
-                color: '#fff',
-                padding: '12px 32px', borderRadius: 'var(--radius-sm)',
-                fontWeight: 700, fontSize: '1rem',
-                boxShadow: '0 4px 12px rgba(59,111,212,0.3)'
+                background: loading ? '#8ca8e8' : 'linear-gradient(135deg, #3b6fd4, #2a5bb8)',
+                color: '#f0f2f5',
+                padding: '11px 28px', borderRadius: '2px',
+                fontWeight: 700, fontSize: '0.85rem',
+                letterSpacing: '0.06em'
               }}
             >
               {loading ? 'יוצר...' : 'צור אירוע'}

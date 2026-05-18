@@ -40,23 +40,23 @@ export default function AdminsManager() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+    <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
       <Navbar />
       <ToastContainer />
 
-      <div style={{ maxWidth: '760px', margin: '0 auto', padding: '28px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <div style={{ maxWidth: '720px', margin: '0 auto', padding: '32px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)' }}>ניהול משתמשים</h1>
-            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginTop: '4px' }}>גישה לסופר אדמין בלבד</p>
+            <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1a2332', letterSpacing: '0.02em' }}>ניהול משתמשים</h1>
+            <p style={{ color: '#6b7a99', fontSize: '0.82rem', marginTop: '2px', letterSpacing: '0.03em' }}>גישה לסופר אדמין בלבד</p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
             style={{
-              background: 'var(--accent)', color: '#fff',
-              padding: '10px 20px', borderRadius: 'var(--radius-sm)',
-              fontWeight: 700, fontSize: '0.95rem',
-              display: 'flex', alignItems: 'center', gap: '6px'
+              background: 'linear-gradient(135deg, #3b6fd4, #2a5bb8)', color: '#f0f2f5',
+              padding: '10px 20px', borderRadius: '2px',
+              fontWeight: 700, fontSize: '0.82rem',
+              letterSpacing: '0.06em'
             }}
           >
             + הוסף אדמין
@@ -64,43 +64,38 @@ export default function AdminsManager() {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-light)' }}>טוען...</div>
+          <div style={{ textAlign: 'center', padding: '60px', color: '#6b7a99' }}>טוען...</div>
         ) : (
-          <div style={{ background: '#fff', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e0e6ed', borderRadius: '4px' }}>
             {admins.map((admin, i) => (
               <div key={admin.id} className="mobile-wrap" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '16px 20px', gap: '12px',
-                borderBottom: i < admins.length - 1 ? '1px solid var(--border)' : 'none'
+                borderBottom: i < admins.length - 1 ? '1px solid #e0e6ed' : 'none'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                   <div style={{
-                    width: '40px', height: '40px', borderRadius: '50%',
-                    background: admin.role === 'superadmin'
-                      ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-                      : 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
+                    width: '36px', height: '36px', borderRadius: '50%',
+                    background: admin.role === 'superadmin' ? '#1a2332' : '#e0e6ed',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontWeight: 700, fontSize: '1rem', flexShrink: 0
+                    color: admin.role === 'superadmin' ? '#f0f2f5' : '#1a2332',
+                    fontWeight: 700, fontSize: '0.9rem', flexShrink: 0
                   }}>
                     {admin.username.charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontWeight: 700, color: 'var(--text)' }}>{admin.username}</span>
+                      <span style={{ fontWeight: 700, color: '#1a2332', fontSize: '0.95rem' }}>{admin.username}</span>
                       {admin.id === me.id && (
-                        <span style={{ fontSize: '0.72rem', background: '#eef2fb', color: 'var(--accent)', padding: '1px 7px', borderRadius: '20px' }}>אתה</span>
+                        <span style={{ fontSize: '0.7rem', background: '#f0f2f5', color: '#6b7a99', padding: '1px 7px', borderRadius: '2px', border: '1px solid #e0e6ed' }}>אתה</span>
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px' }}>
-                      <span style={{
-                        fontSize: '0.75rem', fontWeight: 600, padding: '2px 8px', borderRadius: '20px',
-                        background: admin.role === 'superadmin' ? '#fef3c7' : '#f0f4fb',
-                        color: admin.role === 'superadmin' ? '#d97706' : 'var(--accent)'
-                      }}>
-                        {admin.role === 'superadmin' ? '⭐ סופר אדמין' : 'אדמין'}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '3px' }}>
+                      <span style={{ fontSize: '0.75rem', color: admin.role === 'superadmin' ? '#1a2332' : '#6b7a99', fontWeight: admin.role === 'superadmin' ? 700 : 400 }}>
+                        {admin.role === 'superadmin' ? '★ סופר אדמין' : 'אדמין'}
                       </span>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>
-                        נוצר: {new Date(admin.created_at).toLocaleDateString('he-IL')}
+                      <span style={{ fontSize: '0.75rem', color: '#8ca8e8' }}>
+                        {new Date(admin.created_at).toLocaleDateString('he-IL')}
                       </span>
                     </div>
                   </div>
@@ -110,9 +105,9 @@ export default function AdminsManager() {
                   <button
                     onClick={() => setEditTarget(admin)}
                     style={{
-                      background: '#eef2fb', color: 'var(--accent)',
-                      border: '1px solid #b8cbef', borderRadius: 'var(--radius-sm)',
-                      padding: '6px 14px', fontSize: '0.85rem', fontWeight: 600
+                      background: '#f8fafc', color: '#1a2332',
+                      border: '1px solid #e0e6ed', borderRadius: '2px',
+                      padding: '6px 14px', fontSize: '0.8rem', fontWeight: 600
                     }}
                   >
                     ערוך
@@ -121,9 +116,9 @@ export default function AdminsManager() {
                     <button
                       onClick={() => handleDelete(admin.id, admin.username)}
                       style={{
-                        background: '#fee2e2', color: '#dc2626',
-                        border: '1px solid #fca5a5', borderRadius: 'var(--radius-sm)',
-                        padding: '6px 14px', fontSize: '0.85rem'
+                        background: '#fff', color: '#c0392b',
+                        border: '1px solid #f0c0c0', borderRadius: '2px',
+                        padding: '6px 14px', fontSize: '0.8rem'
                       }}
                     >
                       מחק
@@ -244,7 +239,12 @@ function EditAdminModal({ admin, isSelf, onClose, onSuccess }) {
 function Field({ label, value, onChange, type = 'text', placeholder = '', required = false }) {
   return (
     <div>
-      <label style={{ display: 'block', marginBottom: '6px', fontWeight: 600, fontSize: '0.88rem', color: 'var(--text)' }}>
+      <label style={{
+        display: 'block', marginBottom: '6px',
+        fontWeight: 600, fontSize: '0.78rem',
+        color: '#1a2332', letterSpacing: '0.05em',
+        textTransform: 'uppercase'
+      }}>
         {label}
       </label>
       <input
@@ -255,9 +255,12 @@ function Field({ label, value, onChange, type = 'text', placeholder = '', requir
         required={required}
         style={{
           width: '100%', padding: '10px 12px',
-          border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)',
-          fontSize: '0.95rem', background: '#fafafa'
+          border: '1.5px solid #e0e6ed', borderRadius: '2px',
+          fontSize: '0.95rem', background: '#f8fafc',
+          outline: 'none', transition: 'border-color 0.15s'
         }}
+        onFocus={e => e.target.style.borderColor = '#3b6fd4'}
+        onBlur={e => e.target.style.borderColor = '#e0e6ed'}
       />
     </div>
   )
@@ -265,9 +268,10 @@ function Field({ label, value, onChange, type = 'text', placeholder = '', requir
 
 function btnStyle(loading) {
   return {
-    background: loading ? '#aaa' : 'var(--accent)',
-    color: '#fff', border: 'none',
-    padding: '11px', borderRadius: 'var(--radius-sm)',
-    fontSize: '1rem', fontWeight: 700, marginTop: '4px'
+    background: loading ? '#8ca8e8' : 'linear-gradient(135deg, #3b6fd4, #2a5bb8)',
+    color: '#f0f2f5', border: 'none',
+    padding: '11px', borderRadius: '2px',
+    fontSize: '0.85rem', fontWeight: 700,
+    marginTop: '4px', letterSpacing: '0.06em'
   }
 }
