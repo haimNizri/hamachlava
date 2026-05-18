@@ -19,7 +19,7 @@ router.post('/login', async (req, res) => {
     if (!valid) return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
 
     const token = jwt.sign(
-      { id: admin.id, username: admin.username, role: 'admin' },
+      { id: admin.id, username: admin.username, role: admin.role },
       JWT_SECRET,
       { expiresIn: '7d' }
     );
