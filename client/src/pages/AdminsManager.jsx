@@ -68,7 +68,7 @@ export default function AdminsManager() {
         ) : (
           <div style={{ background: '#fff', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
             {admins.map((admin, i) => (
-              <div key={admin.id} style={{
+              <div key={admin.id} className="mobile-wrap" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '16px 20px', gap: '12px',
                 borderBottom: i < admins.length - 1 ? '1px solid var(--border)' : 'none'

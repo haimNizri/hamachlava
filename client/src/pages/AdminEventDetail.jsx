@@ -167,13 +167,14 @@ export default function AdminEventDetail() {
                 {event.notes && <span>📝 {event.notes}</span>}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div className="mobile-scroll" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <button
                 onClick={() => setShowEditEvent(true)}
                 style={{
                   background: 'rgba(255,255,255,0.15)',
                   color: '#fff', border: '1px solid rgba(255,255,255,0.3)',
-                  padding: '8px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem'
+                  padding: '8px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem',
+                  flexShrink: 0
                 }}
               >
                 עריכה
@@ -183,7 +184,8 @@ export default function AdminEventDetail() {
                 style={{
                   background: 'rgba(255,255,255,0.15)',
                   color: '#fff', border: '1px solid rgba(255,255,255,0.3)',
-                  padding: '8px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem'
+                  padding: '8px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem',
+                  flexShrink: 0
                 }}
               >
                 📱 QR קוד
@@ -193,7 +195,8 @@ export default function AdminEventDetail() {
                 style={{
                   background: 'var(--success)',
                   color: '#fff', border: 'none',
-                  padding: '8px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem', fontWeight: 600
+                  padding: '8px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.9rem', fontWeight: 600,
+                  flexShrink: 0
                 }}
               >
                 📊 ייצוא Excel
@@ -230,7 +233,9 @@ export default function AdminEventDetail() {
         <div style={{
           display: 'flex', gap: '4px',
           background: '#fff', borderRadius: 'var(--radius)',
-          padding: '6px', boxShadow: 'var(--shadow)', marginBottom: '20px'
+          padding: '6px', boxShadow: 'var(--shadow)', marginBottom: '20px',
+          overflowX: 'auto', flexWrap: 'nowrap',
+          WebkitOverflowScrolling: 'touch'
         }}>
           {[
             { id: 'products', label: '📦 מוצרים', count: (event.products || []).length },
@@ -242,6 +247,7 @@ export default function AdminEventDetail() {
               onClick={() => setActiveTab(tab.id)}
               style={{
                 flex: 1,
+                flexShrink: 0,
                 padding: '10px 16px',
                 borderRadius: 'var(--radius-sm)',
                 fontWeight: 600, fontSize: '0.95rem',

@@ -40,14 +40,15 @@ export default function Navbar({ title = 'המחלבה' }) {
         <span style={{ fontWeight: 700, fontSize: '1.2rem', letterSpacing: '0.5px' }}>{title}</span>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
         {token && (
           <>
             <button
               onClick={() => navigate('/admin')}
               style={navBtn()}
             >
-              לוח בקרה
+              <span className="hide-mobile">לוח בקרה</span>
+              <span className="show-mobile-only">🏠</span>
             </button>
 
             {me.role === 'superadmin' && (
@@ -55,11 +56,11 @@ export default function Navbar({ title = 'המחלבה' }) {
                 onClick={() => navigate('/admin/users')}
                 style={navBtn()}
               >
-                👥 משתמשים
+                👥 <span className="hide-mobile">משתמשים</span>
               </button>
             )}
 
-            <div style={{
+            <div className="hide-mobile" style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               background: 'rgba(255,255,255,0.1)',
               borderRadius: 'var(--radius-sm)',

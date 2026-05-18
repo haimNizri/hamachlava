@@ -104,7 +104,51 @@ input, textarea, select {
 .toast.success { background: var(--success); }
 .toast.error { background: var(--accent); }
 
-/* Responsive */
+/* Responsive utility classes */
 @media (max-width: 600px) {
   html { font-size: 15px; }
+
+  .mobile-stack { flex-direction: column !important; }
+  .mobile-hide { display: none !important; }
+  .mobile-full { width: 100% !important; }
+  .mobile-wrap { flex-wrap: wrap !important; }
+  .mobile-col { flex-direction: column !important; align-items: flex-start !important; }
+  .mobile-scroll { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  .mobile-card { flex-direction: column !important; gap: 8px !important; }
+
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-scroll table { min-width: 480px; }
+}
+
+@media (max-width: 900px) {
+  .tablet-wrap { flex-wrap: wrap !important; }
+  .tablet-stack { flex-direction: column !important; }
+}
+
+/* Hide/show helpers */
+.hide-mobile { display: initial; }
+.hide-tablet { display: initial; }
+.stack-mobile { display: flex; }
+.grid-2-mobile { display: grid; }
+.show-mobile-only { display: none; }
+
+@media (max-width: 600px) {
+  .hide-mobile { display: none !important; }
+  .show-mobile-only { display: inline !important; }
+  .stack-mobile { flex-direction: column !important; }
+  .grid-2-mobile { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 900px) {
+  .hide-tablet { display: none !important; }
+}
+
+/* Modal responsive */
+@media (max-width: 600px) {
+  .modal-overlay {
+    padding: 12px 8px !important;
+  }
+  .modal-box {
+    max-height: 95vh !important;
+  }
 }

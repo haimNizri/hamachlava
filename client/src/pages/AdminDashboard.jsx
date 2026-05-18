@@ -176,6 +176,7 @@ function EventList({ events, onDelete, navigate }) {
         <div
           key={event.id}
           onClick={() => navigate(`/admin/events/${event.id}`)}
+          className="mobile-wrap"
           style={{
             background: '#fff',
             borderRadius: 'var(--radius)',
@@ -234,7 +235,7 @@ function EventList({ events, onDelete, navigate }) {
               )}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
             <button
               onClick={e => onDelete(e, event.id)}
               style={{

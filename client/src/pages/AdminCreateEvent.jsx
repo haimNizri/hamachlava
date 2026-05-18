@@ -201,69 +201,71 @@ export default function AdminCreateEvent() {
                 <div
                   key={i}
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr auto auto auto',
-                    gap: '10px',
-                    alignItems: 'center',
                     background: '#f8f9fa',
                     padding: '14px',
                     borderRadius: 'var(--radius-sm)',
                     border: '1px solid var(--border)'
                   }}
                 >
-                  <input
-                    type="text"
-                    value={product.name}
-                    onChange={e => updateProduct(i, 'name', e.target.value)}
-                    placeholder="שם המוצר"
-                    style={{ ...inputStyle, background: '#fff', margin: 0 }}
-                    onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-                    onBlur={e => e.target.style.borderColor = 'var(--border)'}
-                  />
-                  <div style={{ position: 'relative' }}>
-                    <span style={{
-                      position: 'absolute', right: '10px', top: '50%',
-                      transform: 'translateY(-50%)', color: 'var(--text-light)',
-                      fontSize: '0.9rem', pointerEvents: 'none'
-                    }}>₪</span>
+                  {/* Product name row with delete button */}
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+                    <input
+                      type="text"
+                      value={product.name}
+                      onChange={e => updateProduct(i, 'name', e.target.value)}
+                      placeholder="שם המוצר"
+                      style={{ ...inputStyle, flex: 1, background: '#fff', margin: 0 }}
+                      onFocus={e => e.target.style.borderColor = 'var(--primary)'}
+                      onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeProduct(i)}
+                      disabled={products.length === 1}
+                      style={{
+                        background: products.length === 1 ? '#f5f5f5' : '#eef2fb',
+                        color: products.length === 1 ? '#ccc' : 'var(--accent)',
+                        border: `1px solid ${products.length === 1 ? '#eee' : '#b8cbef'}`,
+                        borderRadius: 'var(--radius-sm)',
+                        width: '32px', height: '32px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '1.1rem', flexShrink: 0
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {/* Price and stock side by side */}
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <span style={{
+                        position: 'absolute', right: '10px', top: '50%',
+                        transform: 'translateY(-50%)', color: 'var(--text-light)',
+                        fontSize: '0.9rem', pointerEvents: 'none'
+                      }}>₪</span>
+                      <input
+                        type="number"
+                        value={product.price}
+                        onChange={e => updateProduct(i, 'price', e.target.value)}
+                        placeholder="מחיר"
+                        min="0"
+                        step="0.5"
+                        style={{ ...inputStyle, background: '#fff', width: '100%', paddingRight: '26px', margin: 0 }}
+                        onFocus={e => e.target.style.borderColor = 'var(--primary)'}
+                        onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                      />
+                    </div>
                     <input
                       type="number"
-                      value={product.price}
-                      onChange={e => updateProduct(i, 'price', e.target.value)}
-                      placeholder="מחיר"
+                      value={product.available_quantity}
+                      onChange={e => updateProduct(i, 'available_quantity', e.target.value)}
+                      placeholder="מלאי"
                       min="0"
-                      step="0.5"
-                      style={{ ...inputStyle, background: '#fff', width: '90px', paddingRight: '26px', margin: 0 }}
+                      style={{ ...inputStyle, background: '#fff', flex: 1, margin: 0 }}
                       onFocus={e => e.target.style.borderColor = 'var(--primary)'}
                       onBlur={e => e.target.style.borderColor = 'var(--border)'}
                     />
                   </div>
-                  <input
-                    type="number"
-                    value={product.available_quantity}
-                    onChange={e => updateProduct(i, 'available_quantity', e.target.value)}
-                    placeholder="מלאי"
-                    min="0"
-                    style={{ ...inputStyle, background: '#fff', width: '80px', margin: 0 }}
-                    onFocus={e => e.target.style.borderColor = 'var(--primary)'}
-                    onBlur={e => e.target.style.borderColor = 'var(--border)'}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeProduct(i)}
-                    disabled={products.length === 1}
-                    style={{
-                      background: products.length === 1 ? '#f5f5f5' : '#eef2fb',
-                      color: products.length === 1 ? '#ccc' : 'var(--accent)',
-                      border: `1px solid ${products.length === 1 ? '#eee' : '#b8cbef'}`,
-                      borderRadius: 'var(--radius-sm)',
-                      width: '32px', height: '32px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '1.1rem', flexShrink: 0
-                    }}
-                  >
-                    ×
-                  </button>
                 </div>
               ))}
             </div>

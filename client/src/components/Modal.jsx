@@ -9,6 +9,7 @@ export default function Modal({ title, onClose, children, maxWidth = '500px' }) 
   return (
     <div
       onClick={onClose}
+      className="modal-overlay"
       style={{
         position: 'fixed', inset: 0,
         background: 'rgba(0,0,0,0.5)',
@@ -18,6 +19,7 @@ export default function Modal({ title, onClose, children, maxWidth = '500px' }) 
     >
       <div
         onClick={e => e.stopPropagation()}
+        className="modal-box"
         style={{
           background: '#fff',
           borderRadius: 'var(--radius)',
