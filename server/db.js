@@ -12,6 +12,7 @@ async function init() {
       id SERIAL PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'admin',
       created_at TIMESTAMP DEFAULT NOW()
     );
 
@@ -55,12 +56,21 @@ async function init() {
     );
   `);
 
-  // Seed admin
-  const { rows } = await pool.query('SELECT id FROM admins WHERE username = $1', ['admin']);
+  // Add role column to existing DBs that don't have it yet
+  await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'admin'`).catch(() => {});
+
+  // Seed superadmin
+  const { rows } = await pool.query('SELECT id, role FROM admins WHERE username = $1', ['admin']);
   if (rows.length === 0) {
     const hash = bcrypt.hashSync('admin123', 10);
-    await pool.query('INSERT INTO admins (username, password_hash) VALUES ($1, $2)', ['admin', hash]);
-    console.log('Admin seeded: admin / admin123');
+    await pool.query(
+      'INSERT INTO admins (username, password_hash, role) VALUES ($1, $2, $3)',
+      ['admin', hash, 'superadmin']
+    );
+    console.log('Superadmin seeded: admin / admin123');
+  } else if (rows[0].role !== 'superadmin') {
+    await pool.query("UPDATE admins SET role = 'superadmin' WHERE username = 'admin'");
+    console.log('Upgraded admin to superadmin');
   }
 }
 

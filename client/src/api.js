@@ -113,6 +113,15 @@ export const purchasesApi = {
   delete: (id) => request(`/purchases/${id}`, { method: 'DELETE' })
 }
 
+// Admins management (superadmin only + self profile)
+export const adminsApi = {
+  list: () => request('/admins'),
+  create: (data) => request('/admins', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/admins/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => request(`/admins/${id}`, { method: 'DELETE' }),
+  updateProfile: (data) => request('/admins/me/profile', { method: 'PUT', body: JSON.stringify(data) }),
+}
+
 // Public event (no auth needed, but pass customer token)
 export const publicApi = {
   getEvent: async (id) => {

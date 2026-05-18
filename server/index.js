@@ -10,6 +10,7 @@ const eventsRoutes = require('./routes/events');
 const productsRoutes = require('./routes/products');
 const customersRoutes = require('./routes/customers');
 const purchasesRoutes = require('./routes/purchases');
+const adminsRoutes = require('./routes/admins');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -23,6 +24,7 @@ app.use(express.json());
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admins', adminsRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/products', productsRoutes);
 app.use('/api/customers', customersRoutes);

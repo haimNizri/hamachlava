@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import AdminLogin from './pages/AdminLogin'
+import AdminsManager from './pages/AdminsManager'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminEventDetail from './pages/AdminEventDetail'
 import AdminCreateEvent from './pages/AdminCreateEvent'
@@ -26,6 +27,9 @@ export default function App() {
         } />
         <Route path="/admin/events/:id" element={
           <ProtectedRoute><AdminEventDetail /></ProtectedRoute>
+        } />
+        <Route path="/admin/users" element={
+          <ProtectedRoute><AdminsManager /></ProtectedRoute>
         } />
         <Route path="/event/:id" element={<CustomerEvent />} />
       </Routes>
