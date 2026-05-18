@@ -6,3 +6,5 @@ server/hamachlava.db
 *.log
 .env
 .DS_Store
+server/hamachlava.db-shm
+server/hamachlava.db-wal
