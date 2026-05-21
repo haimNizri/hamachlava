@@ -84,11 +84,11 @@ export default function AdminEventDetail() {
     }
   }
 
-  async function handleDeleteCustomer(customerId) {
-    if (!confirm('למחוק את הלקוח מהמערכת לחלוטין?')) return
+  async function handleDeleteCustomer(customerName) {
+    if (!confirm(`להסיר את ${customerName} מהאירוע? כל הרכישות שלהם יימחקו.`)) return
     try {
-      await customersApi.deleteCustomer(customerId)
-      showToast('הלקוח נמחק', 'success')
+      await eventsApi.removeCustomerFromEvent(id, customerName)
+      showToast('הלקוח הוסר מהאירוע', 'success')
       loadEvent()
     } catch (err) {
       showToast(err.message, 'error')
@@ -690,19 +690,19 @@ function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    customersApi.list()
+    customersApi.listByEvent(eventId)
       .then(setAllCustomers)
       .catch(() => setAllCustomers([]))
       .finally(() => setCustomersLoading(false))
-  }, [])
+  }, [eventId])
 
   const filteredCustomers = allCustomers.filter(c =>
-    `${c.first_name} ${c.last_name}`.toLowerCase().includes(filterQuery.toLowerCase())
+    (c.customer_name || '').toLowerCase().includes(filterQuery.toLowerCase())
   )
 
   const customerName = isNewCustomer
     ? newCustomerName.trim()
-    : selectedCustomer ? `${selectedCustomer.first_name} ${selectedCustomer.last_name}` : ''
+    : selectedCustomer ? selectedCustomer.customer_name : ''
 
   function setQty(productId, val) {
     const num = parseInt(val) || 0
@@ -721,7 +721,7 @@ function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
     if (entries.length === 0) { showToast('יש לבחור לפחות מוצר אחד', 'error'); return }
     setLoading(true)
     const session_id = crypto.randomUUID()
-    const customer_id = !isNewCustomer && selectedCustomer ? selectedCustomer.id : null
+    const customer_id = !isNewCustomer && selectedCustomer ? selectedCustomer.customer_id : null
     try {
       for (const [pid, qty] of entries) {
         await purchasesApi.addAsAdmin({
@@ -786,37 +786,40 @@ function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
                   <div style={{ padding: '16px', textAlign: 'center', color: '#6b7a99', fontSize: '0.85rem' }}>
                     {filterQuery ? 'לא נמצאו לקוחות' : 'אין לקוחות רשומים'}
                   </div>
-                ) : filteredCustomers.map(c => (
-                  <div
-                    key={c.id}
-                    onClick={() => setSelectedCustomer(c)}
-                    style={{
-                      padding: '10px 14px', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '10px',
-                      borderBottom: '1px solid #f0f2f5',
-                      background: selectedCustomer?.id === c.id ? '#eef3fc' : '#fff',
-                      transition: 'background 0.1s'
-                    }}
-                    onMouseEnter={e => { if (selectedCustomer?.id !== c.id) e.currentTarget.style.background = '#f8fafc' }}
-                    onMouseLeave={e => { if (selectedCustomer?.id !== c.id) e.currentTarget.style.background = '#fff' }}
-                  >
-                    <div style={{
-                      width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
-                      background: selectedCustomer?.id === c.id ? '#3b6fd4' : '#e0e6ed',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: selectedCustomer?.id === c.id ? '#fff' : '#6b7a99',
-                      fontSize: '0.8rem', fontWeight: 700
-                    }}>
-                      {c.first_name[0]}
+                ) : filteredCustomers.map(c => {
+                  const isSelected = selectedCustomer?.customer_name === c.customer_name
+                  return (
+                    <div
+                      key={c.customer_name}
+                      onClick={() => setSelectedCustomer(c)}
+                      style={{
+                        padding: '10px 14px', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                        borderBottom: '1px solid #f0f2f5',
+                        background: isSelected ? '#eef3fc' : '#fff',
+                        transition: 'background 0.1s'
+                      }}
+                      onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = '#f8fafc' }}
+                      onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = '#fff' }}
+                    >
+                      <div style={{
+                        width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+                        background: isSelected ? '#3b6fd4' : '#e0e6ed',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: isSelected ? '#fff' : '#6b7a99',
+                        fontSize: '0.8rem', fontWeight: 700
+                      }}>
+                        {(c.customer_name || '?')[0]}
+                      </div>
+                      <span style={{ fontWeight: isSelected ? 700 : 500, color: '#1a2332', fontSize: '0.9rem' }}>
+                        {c.customer_name}
+                      </span>
+                      {isSelected && (
+                        <span style={{ marginRight: 'auto', color: '#3b6fd4', fontSize: '0.8rem', fontWeight: 700 }}>✓ נבחר</span>
+                      )}
                     </div>
-                    <span style={{ fontWeight: selectedCustomer?.id === c.id ? 700 : 500, color: '#1a2332', fontSize: '0.9rem' }}>
-                      {c.first_name} {c.last_name}
-                    </span>
-                    {selectedCustomer?.id === c.id && (
-                      <span style={{ marginRight: 'auto', color: '#3b6fd4', fontSize: '0.8rem', fontWeight: 700 }}>✓ נבחר</span>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           ) : (
@@ -1091,18 +1094,16 @@ function CustomerCard({ customer: c, onDelete }) {
             <div style={{ fontWeight: 700, color: '#1a2332', fontSize: '1rem' }}>₪{c.totalPaid.toFixed(0)}</div>
             <div style={{ fontSize: '0.72rem', color: '#6b7a99' }}>סה"כ</div>
           </div>
-          {c.customerId && (
-            <button
-              onClick={e => { e.stopPropagation(); onDelete(c.customerId) }}
-              style={{
-                background: '#fff', color: '#c0392b',
-                border: '1px solid #f0c0c0', borderRadius: '2px',
-                padding: '4px 10px', fontSize: '0.78rem', flexShrink: 0
-              }}
-            >
-              מחק
-            </button>
-          )}
+          <button
+            onClick={e => { e.stopPropagation(); onDelete(c.name) }}
+            style={{
+              background: '#fff', color: '#c0392b',
+              border: '1px solid #f0c0c0', borderRadius: '2px',
+              padding: '4px 10px', fontSize: '0.78rem', flexShrink: 0
+            }}
+          >
+            הסר
+          </button>
           <span style={{ color: '#6b7a99', fontSize: '0.75rem', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
         </div>
       </div>

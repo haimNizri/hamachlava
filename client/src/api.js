@@ -55,6 +55,8 @@ export const eventsApi = {
   update: (id, data) => request(`/events/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => request(`/events/${id}`, { method: 'DELETE' }),
   getQR: (id, baseUrl) => request(`/events/${id}/qr?base_url=${encodeURIComponent(baseUrl)}`),
+  removeCustomerFromEvent: (id, customerName) =>
+    request(`/events/${id}/customers/${encodeURIComponent(customerName)}`, { method: 'DELETE' }),
   export: async (id) => {
     const token = getAdminToken()
     const res = await fetch(`${BASE}/events/${id}/export`, {

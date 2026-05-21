@@ -150,17 +150,34 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 router.get('/:id/customers', requireAdmin, async (req, res) => {
   try {
     const { rows } = await pool.query(`
-      SELECT DISTINCT
-        c.id, c.first_name, c.last_name,
+      SELECT
+        pu.customer_name,
+        MAX(pu.customer_id) as customer_id,
+        MAX(c.first_name) as first_name,
+        MAX(c.last_name) as last_name,
         COUNT(DISTINCT pu.session_id) as visits,
         COALESCE(SUM(pu.total_price), 0) as total_spent
       FROM purchases pu
       LEFT JOIN customers c ON c.id = pu.customer_id
-      WHERE pu.event_id = $1 AND pu.customer_id IS NOT NULL
-      GROUP BY c.id, c.first_name, c.last_name
-      ORDER BY c.first_name, c.last_name
+      WHERE pu.event_id = $1
+        AND pu.customer_name IS NOT NULL
+        AND pu.customer_name != ''
+      GROUP BY pu.customer_name
+      ORDER BY pu.customer_name
     `, [req.params.id]);
     res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/:id/customers/:customerName', requireAdmin, async (req, res) => {
+  try {
+    await pool.query(
+      'DELETE FROM purchases WHERE event_id = $1 AND customer_name = $2',
+      [req.params.id, req.params.customerName]
+    );
+    res.json({ message: 'הלקוח הוסר מהאירוע' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
