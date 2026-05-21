@@ -104,7 +104,11 @@ export const customersApi = {
   search: (q) =>
     request(`/customers/search?q=${encodeURIComponent(q)}`, {}, 'admin'),
   list: () =>
-    request('/customers/', {}, 'admin')
+    request('/customers/', {}, 'admin'),
+  listByEvent: (eventId) =>
+    request(`/events/${eventId}/customers`, {}, 'admin'),
+  deleteCustomer: (id) =>
+    request(`/customers/${id}`, { method: 'DELETE' }, 'admin'),
 }
 
 // Purchases

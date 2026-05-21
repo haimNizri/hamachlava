@@ -74,4 +74,20 @@ router.get('/check/:deviceId', async (req, res) => {
   }
 });
 
+router.delete('/:id', async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('UPDATE purchases SET customer_id = NULL WHERE customer_id = $1', [req.params.id]);
+    await client.query('DELETE FROM customers WHERE id = $1', [req.params.id]);
+    await client.query('COMMIT');
+    res.json({ message: 'הלקוח נמחק' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;

@@ -146,6 +146,26 @@ router.delete('/:id', requireAdmin, async (req, res) => {
 });
 
 // GET /api/events/:id/qr
+// GET /api/events/:id/customers — customers who purchased in this event
+router.get('/:id/customers', requireAdmin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT DISTINCT
+        c.id, c.first_name, c.last_name,
+        COUNT(DISTINCT pu.session_id) as visits,
+        COALESCE(SUM(pu.total_price), 0) as total_spent
+      FROM purchases pu
+      LEFT JOIN customers c ON c.id = pu.customer_id
+      WHERE pu.event_id = $1 AND pu.customer_id IS NOT NULL
+      GROUP BY c.id, c.first_name, c.last_name
+      ORDER BY c.first_name, c.last_name
+    `, [req.params.id]);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/:id/qr', requireAdmin, async (req, res) => {
   try {
     const { rows: ev } = await pool.query('SELECT * FROM events WHERE id = $1', [req.params.id]);

@@ -84,6 +84,17 @@ export default function AdminEventDetail() {
     }
   }
 
+  async function handleDeleteCustomer(customerId) {
+    if (!confirm('למחוק את הלקוח מהמערכת לחלוטין?')) return
+    try {
+      await customersApi.deleteCustomer(customerId)
+      showToast('הלקוח נמחק', 'success')
+      loadEvent()
+    } catch (err) {
+      showToast(err.message, 'error')
+    }
+  }
+
   async function handleExport() {
     try {
       await eventsApi.export(id)
@@ -235,7 +246,7 @@ export default function AdminEventDetail() {
           {[
             { id: 'products', label: 'מוצרים', count: (event.products || []).length },
             { id: 'purchases', label: 'רכישות', count: (event.purchases || []).length },
-            { id: 'customers', label: 'סיכום לקוחות', count: Object.keys(groupByCustomer(event.purchases || [])).length },
+            { id: 'customers', label: 'לקוחות', count: Object.keys(groupByCustomer(event.purchases || [])).length },
           ].map(tab => (
             <button
               key={tab.id}
@@ -449,7 +460,7 @@ export default function AdminEventDetail() {
 
         {/* Customers Summary Tab */}
         {activeTab === 'customers' && (
-          <CustomerSummaryTab purchases={event.purchases || []} />
+          <CustomerSummaryTab purchases={event.purchases || []} onDeleteCustomer={handleDeleteCustomer} />
         )}
       </div>
 
@@ -679,11 +690,11 @@ function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    customersApi.list()
+    customersApi.listByEvent(eventId)
       .then(setAllCustomers)
       .catch(() => setAllCustomers([]))
       .finally(() => setCustomersLoading(false))
-  }, [])
+  }, [eventId])
 
   const filteredCustomers = allCustomers.filter(c =>
     `${c.first_name} ${c.last_name}`.toLowerCase().includes(filterQuery.toLowerCase())
@@ -987,7 +998,7 @@ function groupByCustomer(purchases) {
   const map = {}
   for (const p of purchases) {
     const key = p.customer_name || 'אנונימי'
-    if (!map[key]) map[key] = { purchases: [], sessions: new Set() }
+    if (!map[key]) map[key] = { purchases: [], sessions: new Set(), customerId: p.customer_id || null }
     map[key].purchases.push(p)
     if (p.session_id) map[key].sessions.add(p.session_id)
   }
@@ -996,7 +1007,7 @@ function groupByCustomer(purchases) {
 
 // ─── Customer Summary Tab ─────────────────────────────────────────────────────
 
-function CustomerSummaryTab({ purchases }) {
+function CustomerSummaryTab({ purchases, onDeleteCustomer }) {
   const byCustomer = groupByCustomer(purchases)
   const customers = Object.entries(byCustomer).map(([name, data]) => {
     const totalQty = data.purchases.reduce((s, p) => s + p.quantity, 0)
@@ -1012,7 +1023,7 @@ function CustomerSummaryTab({ purchases }) {
       if (!bySess[sid]) bySess[sid] = { time: p.created_at, items: [] }
       bySess[sid].items.push(p)
     }
-    return { name, totalQty, totalPaid, visits, lastVisit, sessions: Object.values(bySess) }
+    return { name, customerId: data.customerId, totalQty, totalPaid, visits, lastVisit, sessions: Object.values(bySess) }
   }).sort((a, b) => b.totalPaid - a.totalPaid)
 
   if (customers.length === 0) {
@@ -1030,13 +1041,13 @@ function CustomerSummaryTab({ purchases }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {customers.map(c => (
-        <CustomerCard key={c.name} customer={c} />
+        <CustomerCard key={c.name} customer={c} onDelete={onDeleteCustomer} />
       ))}
     </div>
   )
 }
 
-function CustomerCard({ customer: c }) {
+function CustomerCard({ customer: c, onDelete }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -1069,7 +1080,7 @@ function CustomerCard({ customer: c }) {
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontWeight: 700, color: '#1a2332', fontSize: '1rem' }}>{c.totalQty}</div>
             <div style={{ fontSize: '0.72rem', color: '#6b7a99' }}>פריטים</div>
@@ -1078,6 +1089,18 @@ function CustomerCard({ customer: c }) {
             <div style={{ fontWeight: 700, color: '#1a2332', fontSize: '1rem' }}>₪{c.totalPaid.toFixed(0)}</div>
             <div style={{ fontSize: '0.72rem', color: '#6b7a99' }}>סה"כ</div>
           </div>
+          {c.customerId && (
+            <button
+              onClick={e => { e.stopPropagation(); onDelete(c.customerId) }}
+              style={{
+                background: '#fff', color: '#c0392b',
+                border: '1px solid #f0c0c0', borderRadius: '2px',
+                padding: '4px 10px', fontSize: '0.78rem', flexShrink: 0
+              }}
+            >
+              מחק
+            </button>
+          )}
           <span style={{ color: '#6b7a99', fontSize: '0.75rem', display: 'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
         </div>
       </div>
