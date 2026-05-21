@@ -561,6 +561,7 @@ export default function AdminEventDetail() {
       {editingPurchase && (
         <EditPurchaseModal
           purchase={editingPurchase}
+          products={event.products || []}
           onClose={() => setEditingPurchase(null)}
           onSuccess={() => { setEditingPurchase(null); loadEvent() }}
         />
@@ -953,18 +954,27 @@ function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
   )
 }
 
-function EditPurchaseModal({ purchase, onClose, onSuccess }) {
+function EditPurchaseModal({ purchase, products, onClose, onSuccess }) {
   const [customerName, setCustomerName] = useState(purchase.customer_name || '')
   const [quantity, setQuantity] = useState(purchase.quantity)
+  const [selectedProduct, setSelectedProduct] = useState(
+    products.find(p => p.id === purchase.product_id) || null
+  )
   const [loading, setLoading] = useState(false)
-  const unitPrice = Number(purchase.total_price) / purchase.quantity
+
+  const unitPrice = selectedProduct ? Number(selectedProduct.price) : Number(purchase.total_price) / purchase.quantity
+  const total = unitPrice * quantity
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!quantity || quantity < 1) { showToast('כמות חייבת להיות לפחות 1', 'error'); return }
     setLoading(true)
     try {
-      await purchasesApi.update(purchase.id, { customer_name: customerName, quantity: Number(quantity) })
+      await purchasesApi.update(purchase.id, {
+        customer_name: customerName,
+        quantity: Number(quantity),
+        product_id: selectedProduct?.id
+      })
       showToast('הרכישה עודכנה', 'success')
       onSuccess()
     } catch (err) {
@@ -975,27 +985,53 @@ function EditPurchaseModal({ purchase, onClose, onSuccess }) {
   }
 
   return (
-    <Modal title="עריכת רכישה" onClose={onClose} maxWidth="400px">
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        <div style={{
-          background: '#f0f2f5', borderRadius: '4px', padding: '10px 14px',
-          fontSize: '0.85rem', color: '#6b7a99'
-        }}>
-          <span style={{ fontWeight: 700, color: '#1a2332' }}>{purchase.product_name}</span>
-          <span style={{ marginRight: '8px' }}>• ₪{unitPrice.toFixed(2)} ליחידה</span>
+    <Modal title="עריכת רכישה" onClose={onClose} maxWidth="420px">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+        {/* Product selector */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>מוצר</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {products.map(p => {
+              const isSelected = selectedProduct?.id === p.id
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => setSelectedProduct(p)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 14px', cursor: 'pointer', borderRadius: '4px',
+                    border: `1.5px solid ${isSelected ? '#3b6fd4' : '#e0e6ed'}`,
+                    background: isSelected ? '#eef3fc' : '#f8fafc',
+                    transition: 'border-color 0.15s, background 0.15s'
+                  }}
+                >
+                  <span style={{ fontWeight: isSelected ? 700 : 500, color: '#1a2332' }}>{p.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '0.85rem', color: '#6b7a99' }}>₪{p.price}</span>
+                    {isSelected && <span style={{ color: '#3b6fd4', fontWeight: 700, fontSize: '0.8rem' }}>✓</span>}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
+
+        {/* Customer name */}
         <div>
           <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '0.9rem' }}>שם לקוח</label>
           <input
             type="text" value={customerName}
             onChange={e => setCustomerName(e.target.value)}
-            style={inputStyle} autoFocus
+            style={inputStyle}
             onFocus={e => e.target.style.borderColor = '#3b6fd4'}
             onBlur={e => e.target.style.borderColor = '#e0e6ed'}
           />
         </div>
+
+        {/* Quantity */}
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '0.9rem' }}>כמות</label>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>כמות</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button type="button"
               onClick={() => setQuantity(q => Math.max(1, q - 1))}
@@ -1021,10 +1057,11 @@ function EditPurchaseModal({ purchase, onClose, onSuccess }) {
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>+</button>
             <span style={{ fontWeight: 700, color: '#3b6fd4', fontSize: '1rem' }}>
-              = ₪{(unitPrice * quantity).toFixed(2)}
+              = ₪{total.toFixed(2)}
             </span>
           </div>
         </div>
+
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>
           <button type="button" onClick={onClose}
             style={{ background: '#f8fafc', color: '#1a2332', border: '1px solid #e0e6ed', padding: '9px 20px', borderRadius: '2px' }}>
@@ -1032,7 +1069,7 @@ function EditPurchaseModal({ purchase, onClose, onSuccess }) {
           </button>
           <button type="submit" disabled={loading}
             style={{ background: 'linear-gradient(135deg, #3b6fd4, #2a5bb8)', color: '#f0f2f5', padding: '9px 24px', borderRadius: '2px', fontWeight: 700 }}>
-            {loading ? 'שומר...' : 'שמור'}
+            {loading ? 'שומר...' : `שמור • ₪${total.toFixed(2)}`}
           </button>
         </div>
       </form>

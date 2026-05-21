@@ -66,7 +66,7 @@ router.post('/', requireAdminOrCustomer, async (req, res) => {
 });
 
 router.put('/:id', requireAdmin, async (req, res) => {
-  const { customer_name, quantity } = req.body;
+  const { customer_name, quantity, product_id } = req.body;
   try {
     const { rows: existing } = await pool.query(
       'SELECT pu.*, p.price FROM purchases pu JOIN products p ON p.id = pu.product_id WHERE pu.id = $1',
@@ -74,12 +74,25 @@ router.put('/:id', requireAdmin, async (req, res) => {
     );
     if (!existing[0]) return res.status(404).json({ error: 'רכישה לא נמצאה' });
     const p = existing[0];
+
+    let unitPrice = p.price;
+    const newProductId = product_id ? Number(product_id) : p.product_id;
+    if (product_id && Number(product_id) !== p.product_id) {
+      const { rows: prod } = await pool.query(
+        'SELECT price FROM products WHERE id = $1 AND event_id = $2',
+        [product_id, p.event_id]
+      );
+      if (!prod[0]) return res.status(404).json({ error: 'מוצר לא נמצא' });
+      unitPrice = prod[0].price;
+    }
+
     const newQty = quantity !== undefined ? Number(quantity) : p.quantity;
     const newName = customer_name !== undefined ? customer_name : p.customer_name;
-    const total_price = p.price * newQty;
+    const total_price = unitPrice * newQty;
+
     const { rows } = await pool.query(
-      'UPDATE purchases SET customer_name=$1, quantity=$2, total_price=$3 WHERE id=$4 RETURNING *',
-      [newName, newQty, total_price, req.params.id]
+      'UPDATE purchases SET customer_name=$1, quantity=$2, total_price=$3, product_id=$4 WHERE id=$5 RETURNING *',
+      [newName, newQty, total_price, newProductId, req.params.id]
     );
     res.json(rows[0]);
   } catch (err) {
