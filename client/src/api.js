@@ -120,6 +120,7 @@ export const purchasesApi = {
     request('/purchases', { method: 'POST', body: JSON.stringify(data) }, tokenType),
   addAsAdmin: (data) =>
     request('/purchases', { method: 'POST', body: JSON.stringify(data) }, 'admin'),
+  update: (id, data) => request(`/purchases/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => request(`/purchases/${id}`, { method: 'DELETE' })
 }
 

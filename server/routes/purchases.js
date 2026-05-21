@@ -65,6 +65,28 @@ router.post('/', requireAdminOrCustomer, async (req, res) => {
   }
 });
 
+router.put('/:id', requireAdmin, async (req, res) => {
+  const { customer_name, quantity } = req.body;
+  try {
+    const { rows: existing } = await pool.query(
+      'SELECT pu.*, p.price FROM purchases pu JOIN products p ON p.id = pu.product_id WHERE pu.id = $1',
+      [req.params.id]
+    );
+    if (!existing[0]) return res.status(404).json({ error: 'רכישה לא נמצאה' });
+    const p = existing[0];
+    const newQty = quantity !== undefined ? Number(quantity) : p.quantity;
+    const newName = customer_name !== undefined ? customer_name : p.customer_name;
+    const total_price = p.price * newQty;
+    const { rows } = await pool.query(
+      'UPDATE purchases SET customer_name=$1, quantity=$2, total_price=$3 WHERE id=$4 RETURNING *',
+      [newName, newQty, total_price, req.params.id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM purchases WHERE id = $1', [req.params.id]);

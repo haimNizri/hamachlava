@@ -29,6 +29,7 @@ export default function AdminEventDetail() {
   const [showQR, setShowQR] = useState(false)
   const [showEditEvent, setShowEditEvent] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
+  const [editingPurchase, setEditingPurchase] = useState(null)
 
   const [qrData, setQrData] = useState(null)
   const [qrLoading, setQrLoading] = useState(false)
@@ -427,16 +428,28 @@ export default function AdminEventDetail() {
                             </div>
                           </td>
                           <td style={{ padding: '12px 14px' }}>
-                            <button
-                              onClick={() => handleDeletePurchase(purchase.id)}
-                              style={{
-                                background: '#fff', color: '#c0392b',
-                                border: '1px solid #f0c0c0', borderRadius: '2px',
-                                padding: '4px 10px', fontSize: '0.78rem'
-                              }}
-                            >
-                              מחק
-                            </button>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                onClick={() => setEditingPurchase(purchase)}
+                                style={{
+                                  background: '#f8fafc', color: '#1a2332',
+                                  border: '1px solid #e0e6ed', borderRadius: '2px',
+                                  padding: '4px 10px', fontSize: '0.78rem', fontWeight: 600
+                                }}
+                              >
+                                ערוך
+                              </button>
+                              <button
+                                onClick={() => handleDeletePurchase(purchase.id)}
+                                style={{
+                                  background: '#fff', color: '#c0392b',
+                                  border: '1px solid #f0c0c0', borderRadius: '2px',
+                                  padding: '4px 10px', fontSize: '0.78rem'
+                                }}
+                              >
+                                מחק
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -542,6 +555,15 @@ export default function AdminEventDetail() {
             )}
           </div>
         </Modal>
+      )}
+
+      {/* Edit Purchase Modal */}
+      {editingPurchase && (
+        <EditPurchaseModal
+          purchase={editingPurchase}
+          onClose={() => setEditingPurchase(null)}
+          onSuccess={() => { setEditingPurchase(null); loadEvent() }}
+        />
       )}
 
       {/* Edit Event Modal */}
@@ -924,6 +946,93 @@ function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
           <button type="submit" disabled={loading}
             style={{ background: loading ? '#8ca8e8' : 'linear-gradient(135deg, #3b6fd4, #2a5bb8)', color: '#fff', padding: '9px 24px', borderRadius: '6px', fontWeight: 700, border: 'none' }}>
             {loading ? 'שומר...' : `הוסף רכישה${total > 0 ? ` • ₪${total.toFixed(2)}` : ''}`}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
+function EditPurchaseModal({ purchase, onClose, onSuccess }) {
+  const [customerName, setCustomerName] = useState(purchase.customer_name || '')
+  const [quantity, setQuantity] = useState(purchase.quantity)
+  const [loading, setLoading] = useState(false)
+  const unitPrice = Number(purchase.total_price) / purchase.quantity
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!quantity || quantity < 1) { showToast('כמות חייבת להיות לפחות 1', 'error'); return }
+    setLoading(true)
+    try {
+      await purchasesApi.update(purchase.id, { customer_name: customerName, quantity: Number(quantity) })
+      showToast('הרכישה עודכנה', 'success')
+      onSuccess()
+    } catch (err) {
+      showToast(err.message, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Modal title="עריכת רכישה" onClose={onClose} maxWidth="400px">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{
+          background: '#f0f2f5', borderRadius: '4px', padding: '10px 14px',
+          fontSize: '0.85rem', color: '#6b7a99'
+        }}>
+          <span style={{ fontWeight: 700, color: '#1a2332' }}>{purchase.product_name}</span>
+          <span style={{ marginRight: '8px' }}>• ₪{unitPrice.toFixed(2)} ליחידה</span>
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '0.9rem' }}>שם לקוח</label>
+          <input
+            type="text" value={customerName}
+            onChange={e => setCustomerName(e.target.value)}
+            style={inputStyle} autoFocus
+            onFocus={e => e.target.style.borderColor = '#3b6fd4'}
+            onBlur={e => e.target.style.borderColor = '#e0e6ed'}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '0.9rem' }}>כמות</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button type="button"
+              onClick={() => setQuantity(q => Math.max(1, q - 1))}
+              style={{
+                width: '34px', height: '34px', borderRadius: '50%',
+                background: '#e0e6ed', color: '#1a2332',
+                border: 'none', fontSize: '1.1rem', fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>−</button>
+            <input
+              type="number" value={quantity} min="1"
+              onChange={e => setQuantity(Math.max(1, Number(e.target.value) || 1))}
+              style={{ ...inputStyle, width: '70px', textAlign: 'center', direction: 'ltr' }}
+              onFocus={e => e.target.style.borderColor = '#3b6fd4'}
+              onBlur={e => e.target.style.borderColor = '#e0e6ed'}
+            />
+            <button type="button"
+              onClick={() => setQuantity(q => q + 1)}
+              style={{
+                width: '34px', height: '34px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #3b6fd4, #2a5bb8)',
+                color: '#fff', border: 'none', fontSize: '1.1rem', fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>+</button>
+            <span style={{ fontWeight: 700, color: '#3b6fd4', fontSize: '1rem' }}>
+              = ₪{(unitPrice * quantity).toFixed(2)}
+            </span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>
+          <button type="button" onClick={onClose}
+            style={{ background: '#f8fafc', color: '#1a2332', border: '1px solid #e0e6ed', padding: '9px 20px', borderRadius: '2px' }}>
+            ביטול
+          </button>
+          <button type="submit" disabled={loading}
+            style={{ background: 'linear-gradient(135deg, #3b6fd4, #2a5bb8)', color: '#f0f2f5', padding: '9px 24px', borderRadius: '2px', fontWeight: 700 }}>
+            {loading ? 'שומר...' : 'שמור'}
           </button>
         </div>
       </form>
