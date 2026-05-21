@@ -690,11 +690,11 @@ function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    customersApi.listByEvent(eventId)
+    customersApi.list()
       .then(setAllCustomers)
       .catch(() => setAllCustomers([]))
       .finally(() => setCustomersLoading(false))
-  }, [eventId])
+  }, [])
 
   const filteredCustomers = allCustomers.filter(c =>
     `${c.first_name} ${c.last_name}`.toLowerCase().includes(filterQuery.toLowerCase())
@@ -721,6 +721,7 @@ function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
     if (entries.length === 0) { showToast('יש לבחור לפחות מוצר אחד', 'error'); return }
     setLoading(true)
     const session_id = crypto.randomUUID()
+    const customer_id = !isNewCustomer && selectedCustomer ? selectedCustomer.id : null
     try {
       for (const [pid, qty] of entries) {
         await purchasesApi.addAsAdmin({
@@ -728,6 +729,7 @@ function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
           product_id: Number(pid),
           quantity: Number(qty),
           customer_name: customerName,
+          customer_id,
           session_id
         })
       }

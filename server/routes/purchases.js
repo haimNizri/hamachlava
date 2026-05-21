@@ -23,7 +23,7 @@ router.get('/events/:id/purchases', requireAdmin, async (req, res) => {
 });
 
 router.post('/', requireAdminOrCustomer, async (req, res) => {
-  const { event_id, product_id, quantity, customer_name, session_id } = req.body;
+  const { event_id, product_id, quantity, customer_name, customer_id: bodyCustomerId, session_id } = req.body;
   if (!event_id || !product_id || !quantity)
     return res.status(400).json({ error: 'נדרש: event_id, product_id, quantity' });
 
@@ -42,6 +42,7 @@ router.post('/', requireAdminOrCustomer, async (req, res) => {
     if (req.admin) {
       added_by = 'admin';
       finalCustomerName = customer_name || 'מנהל';
+      if (bodyCustomerId) customer_id = Number(bodyCustomerId);
     } else if (req.customer) {
       customer_id = req.customer.id;
       finalCustomerName = `${req.customer.firstName} ${req.customer.lastName}`;
