@@ -100,7 +100,11 @@ export const customersApi = {
   register: (data) =>
     request('/customers/register', { method: 'POST', body: JSON.stringify(data) }, 'none'),
   check: (deviceId) =>
-    request(`/customers/check/${deviceId}`, {}, 'none')
+    request(`/customers/check/${deviceId}`, {}, 'none'),
+  search: (q) =>
+    request(`/customers/search?q=${encodeURIComponent(q)}`, {}, 'admin'),
+  list: () =>
+    request('/customers/', {}, 'admin')
 }
 
 // Purchases

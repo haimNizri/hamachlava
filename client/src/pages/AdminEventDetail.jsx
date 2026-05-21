@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { eventsApi, productsApi, purchasesApi } from '../api'
+import { eventsApi, productsApi, purchasesApi, customersApi } from '../api'
 import Navbar from '../components/Navbar'
 import Modal from '../components/Modal'
 import ToastContainer, { showToast } from '../components/Toast'
@@ -669,27 +669,58 @@ function EditProductModal({ product, onClose, onSuccess }) {
 }
 
 function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
-  const [form, setForm] = useState({
-    customer_name: '',
-    product_id: products[0]?.id || '',
-    quantity: 1
-  })
+  const [isNewCustomer, setIsNewCustomer] = useState(false)
+  const [allCustomers, setAllCustomers] = useState([])
+  const [customersLoading, setCustomersLoading] = useState(true)
+  const [filterQuery, setFilterQuery] = useState('')
+  const [selectedCustomer, setSelectedCustomer] = useState(null)
+  const [newCustomerName, setNewCustomerName] = useState('')
+  const [quantities, setQuantities] = useState({})
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    customersApi.list()
+      .then(setAllCustomers)
+      .catch(() => setAllCustomers([]))
+      .finally(() => setCustomersLoading(false))
+  }, [])
+
+  const filteredCustomers = allCustomers.filter(c =>
+    `${c.first_name} ${c.last_name}`.toLowerCase().includes(filterQuery.toLowerCase())
+  )
+
+  const customerName = isNewCustomer
+    ? newCustomerName.trim()
+    : selectedCustomer ? `${selectedCustomer.first_name} ${selectedCustomer.last_name}` : ''
+
+  function setQty(productId, val) {
+    const num = parseInt(val) || 0
+    setQuantities(q => ({ ...q, [productId]: num > 0 ? num : '' }))
+  }
+
+  const entries = Object.entries(quantities).filter(([, qty]) => Number(qty) > 0)
+  const total = entries.reduce((sum, [pid, qty]) => {
+    const price = products.find(p => p.id === Number(pid))?.price || 0
+    return sum + price * Number(qty)
+  }, 0)
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.customer_name || !form.product_id || !form.quantity) {
-      showToast('כל השדות נדרשים', 'error'); return
-    }
+    if (!customerName) { showToast('נא לבחור או להזין שם לקוח', 'error'); return }
+    if (entries.length === 0) { showToast('יש לבחור לפחות מוצר אחד', 'error'); return }
     setLoading(true)
+    const session_id = crypto.randomUUID()
     try {
-      await purchasesApi.addAsAdmin({
-        event_id: Number(eventId),
-        product_id: Number(form.product_id),
-        quantity: Number(form.quantity),
-        customer_name: form.customer_name
-      })
-      showToast('הרכישה נוספה', 'success')
+      for (const [pid, qty] of entries) {
+        await purchasesApi.addAsAdmin({
+          event_id: Number(eventId),
+          product_id: Number(pid),
+          quantity: Number(qty),
+          customer_name: customerName,
+          session_id
+        })
+      }
+      showToast('הרכישה נוספה בהצלחה', 'success')
       onSuccess()
     } catch (err) {
       showToast(err.message, 'error')
@@ -699,42 +730,192 @@ function AddPurchaseModal({ eventId, products, onClose, onSuccess }) {
   }
 
   return (
-    <Modal title="הוספת רכישה ידנית" onClose={onClose}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <Modal title="הוספת רכישה ידנית" onClose={onClose} maxWidth="500px">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+        {/* Customer section */}
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '0.9rem' }}>שם הלקוח *</label>
-          <input type="text" value={form.customer_name} onChange={e => setForm(f => ({ ...f, customer_name: e.target.value }))}
-            placeholder="הזן שם לקוח" style={inputStyle} autoFocus />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <label style={modalLabel}>לקוח *</label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '7px', cursor: 'pointer', fontSize: '0.85rem', color: '#6b7a99' }}>
+              <input
+                type="checkbox"
+                checked={isNewCustomer}
+                onChange={e => { setIsNewCustomer(e.target.checked); setSelectedCustomer(null); setNewCustomerName('') }}
+                style={{ width: '15px', height: '15px', cursor: 'pointer', accentColor: '#3b6fd4' }}
+              />
+              לקוח חדש
+            </label>
+          </div>
+
+          {!isNewCustomer ? (
+            <div>
+              {/* Search filter */}
+              <input
+                type="text"
+                value={filterQuery}
+                onChange={e => setFilterQuery(e.target.value)}
+                placeholder="חפש לפי שם..."
+                style={{ ...inputStyle, marginBottom: '8px' }}
+                onFocus={e => e.target.style.borderColor = '#3b6fd4'}
+                onBlur={e => e.target.style.borderColor = '#e0e6ed'}
+                autoComplete="off"
+              />
+              {/* Customer list */}
+              <div style={{
+                border: '1.5px solid #e0e6ed', borderRadius: '6px',
+                maxHeight: '180px', overflowY: 'auto',
+                background: '#fff'
+              }}>
+                {customersLoading ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#6b7a99', fontSize: '0.85rem' }}>טוען לקוחות...</div>
+                ) : filteredCustomers.length === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#6b7a99', fontSize: '0.85rem' }}>
+                    {filterQuery ? 'לא נמצאו לקוחות' : 'אין לקוחות רשומים'}
+                  </div>
+                ) : filteredCustomers.map(c => (
+                  <div
+                    key={c.id}
+                    onClick={() => setSelectedCustomer(c)}
+                    style={{
+                      padding: '10px 14px', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '10px',
+                      borderBottom: '1px solid #f0f2f5',
+                      background: selectedCustomer?.id === c.id ? '#eef3fc' : '#fff',
+                      transition: 'background 0.1s'
+                    }}
+                    onMouseEnter={e => { if (selectedCustomer?.id !== c.id) e.currentTarget.style.background = '#f8fafc' }}
+                    onMouseLeave={e => { if (selectedCustomer?.id !== c.id) e.currentTarget.style.background = '#fff' }}
+                  >
+                    <div style={{
+                      width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+                      background: selectedCustomer?.id === c.id ? '#3b6fd4' : '#e0e6ed',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: selectedCustomer?.id === c.id ? '#fff' : '#6b7a99',
+                      fontSize: '0.8rem', fontWeight: 700
+                    }}>
+                      {c.first_name[0]}
+                    </div>
+                    <span style={{ fontWeight: selectedCustomer?.id === c.id ? 700 : 500, color: '#1a2332', fontSize: '0.9rem' }}>
+                      {c.first_name} {c.last_name}
+                    </span>
+                    {selectedCustomer?.id === c.id && (
+                      <span style={{ marginRight: 'auto', color: '#3b6fd4', fontSize: '0.8rem', fontWeight: 700 }}>✓ נבחר</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <input
+              type="text"
+              value={newCustomerName}
+              onChange={e => setNewCustomerName(e.target.value)}
+              placeholder="הזן שם לקוח חדש"
+              autoFocus
+              style={inputStyle}
+              onFocus={e => e.target.style.borderColor = '#3b6fd4'}
+              onBlur={e => e.target.style.borderColor = '#e0e6ed'}
+            />
+          )}
+
+          {customerName && (
+            <p style={{ fontSize: '0.78rem', color: '#6b7a99', marginTop: '6px' }}>
+              לקוח שנבחר: <strong style={{ color: '#1a2332' }}>{customerName}</strong>
+            </p>
+          )}
         </div>
+
+        {/* Products list */}
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '0.9rem' }}>מוצר *</label>
-          <select value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))}
-            style={{ ...inputStyle, cursor: 'pointer' }}>
-            {products.map(p => (
-              <option key={p.id} value={p.id}>{p.name} (₪{p.price})</option>
-            ))}
-          </select>
+          <label style={modalLabel}>מוצרים</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {products.map(p => {
+              const qty = quantities[p.id] || ''
+              const subtotal = (Number(qty) || 0) * p.price
+              return (
+                <div key={p.id} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '10px 14px',
+                  background: qty > 0 ? '#eef3fc' : '#f8fafc',
+                  border: `1.5px solid ${qty > 0 ? '#3b6fd4' : '#e0e6ed'}`,
+                  borderRadius: '6px', gap: '12px',
+                  transition: 'border-color 0.15s, background 0.15s'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1a2332' }}>{p.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#6b7a99' }}>
+                      ₪{p.price} ליחידה
+                      {qty > 0 && <span style={{ color: '#3b6fd4', fontWeight: 700, marginRight: '8px' }}>= ₪{subtotal.toFixed(2)}</span>}
+                    </div>
+                  </div>
+                  {/* Stepper */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                    <button type="button"
+                      onClick={() => setQty(p.id, Math.max(0, (Number(qty) || 0) - 1))}
+                      style={{
+                        width: '30px', height: '30px', borderRadius: '50%',
+                        background: qty > 0 ? '#3b6fd4' : '#e0e6ed',
+                        color: qty > 0 ? '#fff' : '#6b7a99',
+                        border: 'none', fontSize: '1.1rem', fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}>−</button>
+                    <input
+                      type="number" value={qty}
+                      onChange={e => setQty(p.id, e.target.value)}
+                      min="0"
+                      style={{
+                        width: '46px', textAlign: 'center',
+                        padding: '5px 4px', border: '1.5px solid #e0e6ed',
+                        borderRadius: '5px', fontSize: '0.95rem', fontWeight: 700,
+                        outline: 'none', direction: 'ltr', background: '#fff'
+                      }}
+                      onFocus={e => e.target.style.borderColor = '#3b6fd4'}
+                      onBlur={e => e.target.style.borderColor = '#e0e6ed'}
+                    />
+                    <button type="button"
+                      onClick={() => setQty(p.id, (Number(qty) || 0) + 1)}
+                      style={{
+                        width: '30px', height: '30px', borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #3b6fd4, #2a5bb8)',
+                        color: '#fff', border: 'none', fontSize: '1.1rem', fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}>+</button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600, fontSize: '0.9rem' }}>כמות *</label>
-          <input type="number" value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))}
-            min="1" style={inputStyle} />
-        </div>
-        {form.product_id && form.quantity && (
-          <div style={{ background: '#f0f2f5', padding: '10px 14px', borderRadius: '2px', fontSize: '0.88rem', color: '#1a2332', fontWeight: 600 }}>
-            סה"כ: ₪{((products.find(p => p.id === Number(form.product_id))?.price || 0) * form.quantity).toFixed(2)}
+
+        {/* Total */}
+        {total > 0 && (
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            background: '#eef3fc', border: '1px solid #c0d4f5',
+            borderRadius: '6px', padding: '12px 16px'
+          }}>
+            <span style={{ fontWeight: 600, color: '#1a2332' }}>סה"כ לתשלום</span>
+            <span style={{ fontWeight: 800, fontSize: '1.15rem', color: '#3b6fd4' }}>₪{total.toFixed(2)}</span>
           </div>
         )}
+
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '4px' }}>
-          <button type="button" onClick={onClose} style={{ background: '#f8fafc', color: '#1a2332', border: '1px solid #e0e6ed', padding: '9px 20px', borderRadius: '2px' }}>ביטול</button>
-          <button type="submit" disabled={loading} style={{ background: 'linear-gradient(135deg, #3b6fd4, #2a5bb8)', color: '#f0f2f5', padding: '9px 24px', borderRadius: '2px', fontWeight: 700 }}>
-            {loading ? 'שומר...' : 'הוסף רכישה'}
+          <button type="button" onClick={onClose}
+            style={{ background: '#f8fafc', color: '#1a2332', border: '1px solid #e0e6ed', padding: '9px 20px', borderRadius: '6px' }}>
+            ביטול
+          </button>
+          <button type="submit" disabled={loading}
+            style={{ background: loading ? '#8ca8e8' : 'linear-gradient(135deg, #3b6fd4, #2a5bb8)', color: '#fff', padding: '9px 24px', borderRadius: '6px', fontWeight: 700, border: 'none' }}>
+            {loading ? 'שומר...' : `הוסף רכישה${total > 0 ? ` • ₪${total.toFixed(2)}` : ''}`}
           </button>
         </div>
       </form>
     </Modal>
   )
 }
+
+const modalLabel = { display: 'block', marginBottom: '6px', fontWeight: 600, fontSize: '0.85rem', color: '#1a2332' }
 
 function EditEventModal({ event, onClose, onSuccess }) {
   const [form, setForm] = useState({

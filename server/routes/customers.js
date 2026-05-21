@@ -33,6 +33,37 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// List all customers (admin)
+router.get('/', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, first_name, last_name FROM customers ORDER BY first_name, last_name'
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Search customers by name (admin only)
+router.get('/search', async (req, res) => {
+  const { q } = req.query;
+  if (!q || q.trim().length < 1) return res.json([]);
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, first_name, last_name
+       FROM customers
+       WHERE CONCAT(first_name, ' ', last_name) ILIKE $1
+       ORDER BY first_name, last_name
+       LIMIT 10`,
+      [`%${q.trim()}%`]
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/check/:deviceId', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT * FROM customers WHERE device_id = $1', [req.params.deviceId]);
