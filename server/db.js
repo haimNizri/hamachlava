@@ -1,10 +1,22 @@
-const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+let pool;
+if (process.env.DATABASE_URL) {
+  const { Pool } = require('pg');
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+} else if (process.env.NODE_ENV === 'production') {
+  console.error('FATAL: DATABASE_URL is not set. Add a Postgres database and set the DATABASE_URL environment variable.');
+  process.exit(1);
+} else {
+  const { newDb } = require('pg-mem');
+  const mem = newDb();
+  const pg = mem.adapters.createPg();
+  pool = new pg.Pool();
+  console.log('⚠️  אין DATABASE_URL — מריץ Postgres בזיכרון (pg-mem). הנתונים יימחקו עם הפעלה מחדש.');
+}
 
 async function init() {
   await pool.query(`
@@ -56,8 +68,10 @@ async function init() {
     );
   `);
 
-  // Add role column to existing DBs that don't have it yet
+  // Migrations for existing DBs
   await pool.query(`ALTER TABLE admins ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'admin'`).catch(() => {});
+  await pool.query(`ALTER TABLE purchases ADD COLUMN IF NOT EXISTS payment_method TEXT`).catch(() => {});
+  await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS bit_phone TEXT`).catch(() => {});
 
   // Seed superadmin
   const { rows } = await pool.query('SELECT id, role FROM admins WHERE username = $1', ['admin']);
