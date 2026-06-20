@@ -73,19 +73,14 @@ async function init() {
   await pool.query(`ALTER TABLE purchases ADD COLUMN IF NOT EXISTS payment_method TEXT`).catch(() => {});
   await pool.query(`ALTER TABLE events ADD COLUMN IF NOT EXISTS bit_phone TEXT`).catch(() => {});
 
-  // Seed superadmin
-  const { rows } = await pool.query('SELECT id, role FROM admins WHERE username = $1', ['admin']);
-  if (rows.length === 0) {
-    const hash = bcrypt.hashSync('admin123', 10);
-    await pool.query(
-      'INSERT INTO admins (username, password_hash, role) VALUES ($1, $2, $3)',
-      ['admin', hash, 'superadmin']
-    );
-    console.log('Superadmin seeded: admin / admin123');
-  } else if (rows[0].role !== 'superadmin') {
-    await pool.query("UPDATE admins SET role = 'superadmin' WHERE username = 'admin'");
-    console.log('Upgraded admin to superadmin');
-  }
+  // Seed superadmin — always reset password and role on startup (temporary)
+  const hash = bcrypt.hashSync('admin123', 10);
+  await pool.query(
+    `INSERT INTO admins (username, password_hash, role) VALUES ($1, $2, 'superadmin')
+     ON CONFLICT (username) DO UPDATE SET password_hash = $2, role = 'superadmin'`,
+    ['admin', hash]
+  );
+  console.log('Superadmin reset: admin / admin123');
 }
 
 init().catch(err => console.error('DB init error:', err));
