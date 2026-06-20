@@ -5,7 +5,7 @@ if (process.env.DATABASE_URL) {
   const { Pool } = require('pg');
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: { rejectUnauthorized: false }
   });
 } else if (process.env.NODE_ENV === 'production') {
   console.error('FATAL: DATABASE_URL is not set. Add a Postgres database and set the DATABASE_URL environment variable.');
