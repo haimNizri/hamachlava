@@ -5,7 +5,9 @@ import AdminsManager from './pages/AdminsManager'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminEventDetail from './pages/AdminEventDetail'
 import AdminCreateEvent from './pages/AdminCreateEvent'
+import AdminMonthlyReport from './pages/AdminMonthlyReport'
 import CustomerEvent from './pages/CustomerEvent'
+import CustomerCharges from './pages/CustomerCharges'
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('hamachlava_admin_token')
@@ -31,7 +33,11 @@ export default function App() {
         <Route path="/admin/users" element={
           <ProtectedRoute><AdminsManager /></ProtectedRoute>
         } />
+        <Route path="/admin/reports/monthly" element={
+          <ProtectedRoute><AdminMonthlyReport /></ProtectedRoute>
+        } />
         <Route path="/event/:id" element={<CustomerEvent />} />
+        <Route path="/my-charges" element={<CustomerCharges />} />
       </Routes>
     </BrowserRouter>
   )

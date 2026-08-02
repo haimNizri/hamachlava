@@ -11,6 +11,7 @@ const productsRoutes = require('./routes/products');
 const customersRoutes = require('./routes/customers');
 const purchasesRoutes = require('./routes/purchases');
 const adminsRoutes = require('./routes/admins');
+const reportsRoutes = require('./routes/reports');
 
 const app = express();
 const PORT = process.env.PORT || 3002;
@@ -29,6 +30,7 @@ app.use('/api/events', eventsRoutes);
 app.use('/api/products', productsRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/purchases', purchasesRoutes);
+app.use('/api/reports', reportsRoutes);
 // Products sub-routes on events (POST /api/events/:id/products)
 app.use('/api', productsRoutes);
 

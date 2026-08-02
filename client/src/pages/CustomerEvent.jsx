@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { customersApi, purchasesApi } from '../api'
 
 const DEVICE_KEY = 'hamachlava_device_id'
@@ -25,6 +25,7 @@ function getStoredCustomer() {
 
 export default function CustomerEvent() {
   const { id: eventId } = useParams()
+  const navigate = useNavigate()
   const [stage, setStage] = useState('loading') // loading | register | event | success
   const [event, setEvent] = useState(null)
   const [customer, setCustomer] = useState(null)
@@ -325,6 +326,17 @@ export default function CustomerEvent() {
             בחר מוצרים והזן כמות
           </p>
         </div>
+        <button
+          onClick={() => navigate('/my-charges')}
+          style={{
+            marginInlineStart: 'auto', flexShrink: 0,
+            background: '#f0f2f5', color: '#3b6fd4',
+            border: '1.5px solid #d3ddf0', borderRadius: '2px',
+            padding: '8px 12px', fontSize: '0.8rem', fontWeight: 700
+          }}
+        >
+          החיובים שלי
+        </button>
       </div>
 
       {/* Products */}

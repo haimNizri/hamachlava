@@ -111,6 +111,14 @@ export const customersApi = {
     request(`/events/${eventId}/customers`, {}, 'admin'),
   deleteCustomer: (id) =>
     request(`/customers/${id}`, { method: 'DELETE' }, 'admin'),
+  myCharges: () =>
+    request('/customers/me/charges', {}, 'customer'),
+}
+
+// Reports (admin)
+export const reportsApi = {
+  monthly: (month) =>
+    request(`/reports/monthly${month ? `?month=${encodeURIComponent(month)}` : ''}`, {}, 'admin'),
 }
 
 // Purchases

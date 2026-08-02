@@ -112,6 +112,11 @@ export default function Navbar() {
                 <span className="show-mobile-only">🏠</span>
               </button>
 
+              <button className="nav-btn" onClick={() => navigate('/admin/reports/monthly')}>
+                <span className="hide-mobile">חיובים חודשיים</span>
+                <span className="show-mobile-only">📅</span>
+              </button>
+
               {me.role === 'superadmin' && (
                 <button className="nav-btn" onClick={() => navigate('/admin/users')}>
                   <span className="hide-mobile">משתמשים</span>
