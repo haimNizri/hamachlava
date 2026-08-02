@@ -15,6 +15,7 @@ export default function AdminMonthlyReport() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState({})
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => { load(month) }, [])
 
@@ -42,6 +43,17 @@ export default function AdminMonthlyReport() {
     setExpanded(x => ({ ...x, [key]: !x[key] }))
   }
 
+  async function handleExport() {
+    setExporting(true)
+    try {
+      await reportsApi.exportMonthly(month)
+    } catch (err) {
+      showToast(err.message, 'error')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
       <Navbar />
@@ -56,15 +68,29 @@ export default function AdminMonthlyReport() {
             <h1 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#1a2332', margin: 0 }}>חיובים חודשיים</h1>
             <p style={{ color: '#6b7a99', fontSize: '0.85rem', marginTop: '4px' }}>סיכום חיובים לכל לקוח לפי חודש</p>
           </div>
-          <input
-            type="month"
-            value={month}
-            onChange={onMonthChange}
-            style={{
-              padding: '9px 12px', border: '1.5px solid #e0e6ed', borderRadius: '4px',
-              fontSize: '0.9rem', background: '#f8fafc', color: '#1a2332'
-            }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <input
+              type="month"
+              value={month}
+              onChange={onMonthChange}
+              style={{
+                padding: '9px 12px', border: '1.5px solid #e0e6ed', borderRadius: '4px',
+                fontSize: '0.9rem', background: '#f8fafc', color: '#1a2332'
+              }}
+            />
+            <button
+              onClick={handleExport}
+              disabled={exporting || !data || data.customers.length === 0}
+              style={{
+                background: (exporting || !data || data.customers.length === 0) ? '#c8d0dc' : 'linear-gradient(135deg, #1a7a4a, #15613b)',
+                color: '#f0f2f5', border: 'none', borderRadius: '4px',
+                padding: '9px 16px', fontSize: '0.85rem', fontWeight: 700,
+                cursor: (exporting || !data || data.customers.length === 0) ? 'default' : 'pointer'
+              }}
+            >
+              {exporting ? 'מייצא...' : '⬇ ייצוא לאקסל'}
+            </button>
+          </div>
         </div>
 
         {loading ? (

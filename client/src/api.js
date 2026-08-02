@@ -119,6 +119,20 @@ export const customersApi = {
 export const reportsApi = {
   monthly: (month) =>
     request(`/reports/monthly${month ? `?month=${encodeURIComponent(month)}` : ''}`, {}, 'admin'),
+  exportMonthly: async (month) => {
+    const token = getAdminToken()
+    const res = await fetch(`${BASE}/reports/monthly/export?month=${encodeURIComponent(month)}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) throw new Error('שגיאה בייצוא')
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `monthly_charges_${month}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+  },
 }
 
 // Purchases
